@@ -1,115 +1,166 @@
 <script setup lang="ts">
-import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from "@inertiajs/vue3";
+
+import { Button } from "@/Components/ui/button";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/Components/ui/card";
+
+import {
+    Field,
+    FieldDescription,
+    FieldGroup,
+    FieldLabel,
+} from "@/Components/ui/field";
+
+import { Input } from "@/Components/ui/input";
+import PrimaryButton from "@/Components/PrimaryButton.vue";
 
 const form = useForm({
-    name: '',
-    email: '',
-    password: '',
-    password_confirmation: '',
+    name: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
 });
 
 const submit = () => {
-    form.post(route('register'), {
+    form.post(route("register"), {
         onFinish: () => {
-            form.reset('password', 'password_confirmation');
+            form.reset("password", "password_confirmation");
         },
     });
 };
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Register" />
+    <Head title="Register" />
 
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="name" value="Name" />
+    <div class="flex min-h-screen items-center justify-center bg-gray-100 px-4">
+        <Card class="w-full max-w-md">
+            <CardHeader>
+                <CardTitle>Create an account</CardTitle>
+                <CardDescription>
+                    Enter your information below to create your account
+                </CardDescription>
+            </CardHeader>
 
-                <TextInput
-                    id="name"
-                    type="text"
-                    class="mt-1 block w-full"
-                    v-model="form.name"
-                    required
-                    autofocus
-                    autocomplete="name"
-                />
+            <CardContent>
+                <form @submit.prevent="submit" class="space-y-4">
+                    <!-- NAME -->
+                    <Field>
+                        <FieldLabel for="name">Full Name</FieldLabel>
 
-                <InputError class="mt-2" :message="form.errors.name" />
-            </div>
+                        <Input
+                            id="name"
+                            type="text"
+                            placeholder="John Doe"
+                            v-model="form.name"
+                            required
+                        />
 
-            <div class="mt-4">
-                <InputLabel for="email" value="Email" />
+                        <p
+                            v-if="form.errors.name"
+                            class="text-sm text-red-500 mt-1"
+                        >
+                            {{ form.errors.name }}
+                        </p>
+                    </Field>
 
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autocomplete="username"
-                />
+                    <!-- EMAIL -->
+                    <Field>
+                        <FieldLabel for="email">Email</FieldLabel>
 
-                <InputError class="mt-2" :message="form.errors.email" />
-            </div>
+                        <Input
+                            id="email"
+                            type="email"
+                            placeholder="m@example.com"
+                            v-model="form.email"
+                            required
+                        />
 
-            <div class="mt-4">
-                <InputLabel for="password" value="Password" />
+                        <FieldDescription>
+                            We'll use this to contact you.
+                        </FieldDescription>
 
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="new-password"
-                />
+                        <p
+                            v-if="form.errors.email"
+                            class="text-sm text-red-500 mt-1"
+                        >
+                            {{ form.errors.email }}
+                        </p>
+                    </Field>
 
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
+                    <!-- PASSWORD -->
+                    <Field>
+                        <FieldLabel for="password">Password</FieldLabel>
 
-            <div class="mt-4">
-                <InputLabel
-                    for="password_confirmation"
-                    value="Confirm Password"
-                />
+                        <Input
+                            id="password"
+                            type="password"
+                            v-model="form.password"
+                            required
+                        />
 
-                <TextInput
-                    id="password_confirmation"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password_confirmation"
-                    required
-                    autocomplete="new-password"
-                />
+                        <FieldDescription>
+                            Must be at least 8 characters long.
+                        </FieldDescription>
 
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.password_confirmation"
-                />
-            </div>
+                        <p
+                            v-if="form.errors.password"
+                            class="text-sm text-red-500 mt-1"
+                        >
+                            {{ form.errors.password }}
+                        </p>
+                    </Field>
 
-            <div class="mt-4 flex items-center justify-end">
-                <Link
-                    :href="route('login')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                    Already registered?
-                </Link>
+                    <!-- CONFIRM PASSWORD -->
+                    <Field>
+                        <FieldLabel for="password_confirmation">
+                            Confirm Password
+                        </FieldLabel>
 
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Register
-                </PrimaryButton>
-            </div>
-        </form>
-    </GuestLayout>
+                        <Input
+                            id="password_confirmation"
+                            type="password"
+                            v-model="form.password_confirmation"
+                            required
+                        />
+
+                        <p
+                            v-if="form.errors.password_confirmation"
+                            class="text-sm text-red-500 mt-1"
+                        >
+                            {{ form.errors.password_confirmation }}
+                        </p>
+                    </Field>
+
+                    <!-- BUTTONS -->
+                    <div class="space-y-2 pt-2">
+                        <PrimaryButton
+                            type="submit"
+                            class="w-full justify-center"
+                            :disabled="form.processing"
+                        >
+                            Create Account
+                        </PrimaryButton>
+                    </div>
+
+                    <!-- LOGIN LINK -->
+                    <p class="text-center text-sm mt-4">
+                        Already have an account?
+                        <Link
+                            :href="route('login')"
+                            class="text-primary underline ml-1"
+                        >
+                            Sign in
+                        </Link>
+                    </p>
+                </form>
+            </CardContent>
+        </Card>
+    </div>
 </template>

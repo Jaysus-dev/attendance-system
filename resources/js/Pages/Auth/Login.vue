@@ -7,6 +7,8 @@ import InputLabel from "@/Components/InputLabel.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import TextInput from "@/Components/TextInput.vue";
 
+import { Input } from "@/Components/ui/input";
+
 // ShadCN Card Components
 import {
     Card,
@@ -63,7 +65,7 @@ const submit = () => {
                     <div>
                         <InputLabel for="email" value="Email" />
 
-                        <TextInput
+                        <Input
                             id="email"
                             type="email"
                             class="mt-1 block w-full"
@@ -79,7 +81,7 @@ const submit = () => {
                     <div>
                         <InputLabel for="password" value="Password" />
 
-                        <TextInput
+                        <Input
                             id="password"
                             type="password"
                             class="mt-1 block w-full"
@@ -109,7 +111,7 @@ const submit = () => {
                         <Link
                             v-if="canResetPassword"
                             :href="route('password.request')"
-                            class="text-sm text-primary underline-offset-4 hover:underline"
+                            class="text-sm text-primary underline-offset-4 hover:underline italic"
                         >
                             Forgot password?
                         </Link>

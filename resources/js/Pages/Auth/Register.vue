@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from "@inertiajs/vue3";
 
-import { Button } from "@/Components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from "@/Components/ui/card";
+} from "@/components/ui/card";
 
 import {
     Field,
     FieldDescription,
     FieldGroup,
     FieldLabel,
-} from "@/Components/ui/field";
+} from "@/components/ui/field";
 
-import { Input } from "@/Components/ui/input";
+import { Input } from "@/components/ui/input";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 
 const form = useForm({

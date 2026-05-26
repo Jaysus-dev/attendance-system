@@ -4,7 +4,6 @@
 | Imports
 |--------------------------------------------------------------------------
 */
-
 import {
     Card,
     CardContent,
@@ -46,7 +45,6 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 | Types
 |--------------------------------------------------------------------------
 */
-
 type Course = {
     id: number;
     course_code: string;
@@ -84,7 +82,6 @@ type Student = {
 | Props
 |--------------------------------------------------------------------------
 */
-
 const props = defineProps<{
     students: Student[];
     courses: Course[];
@@ -96,17 +93,16 @@ const props = defineProps<{
 | Search & Filters
 |--------------------------------------------------------------------------
 */
-
 const search = ref("");
 const selectedCourse = ref("");
 const selectedSection = ref("");
+const selectedYear = ref("");
 
 /*
 |--------------------------------------------------------------------------
-| Dynamic Filter Options
+| Dynamic filter options (from students)
 |--------------------------------------------------------------------------
 */
-
 const courses = computed(() => {
     return [...new Set(props.students.map((s) => s.course.course_code))];
 });
@@ -115,12 +111,15 @@ const sections = computed(() => {
     return [...new Set(props.students.map((s) => s.section.section_name))];
 });
 
+const years = computed(() => {
+    return [...new Set(props.students.map((s) => s.year_level))]; // ✅ NEW
+});
+
 /*
 |--------------------------------------------------------------------------
-| Filtered Students
+| FILTERED STUDENTS (UPDATED)
 |--------------------------------------------------------------------------
 */
-
 const filteredStudents = computed(() => {
     return props.students.filter((student) => {
         const matchesSearch =
@@ -140,7 +139,10 @@ const filteredStudents = computed(() => {
             !selectedSection.value ||
             student.section.section_name === selectedSection.value;
 
-        return matchesSearch && matchesCourse && matchesSection;
+        const matchesYear =
+            !selectedYear.value || student.year_level === selectedYear.value;
+
+        return matchesSearch && matchesCourse && matchesSection && matchesYear;
     });
 });
 
@@ -149,7 +151,6 @@ const filteredStudents = computed(() => {
 | Stats
 |--------------------------------------------------------------------------
 */
-
 const totalStudents = computed(() => props.students.length);
 
 /*
@@ -157,7 +158,6 @@ const totalStudents = computed(() => props.students.length);
 | Dialog State
 |--------------------------------------------------------------------------
 */
-
 const open = ref(false);
 const editMode = ref(false);
 const selectedStudentId = ref<number | null>(null);
@@ -167,7 +167,6 @@ const selectedStudentId = ref<number | null>(null);
 | Form
 |--------------------------------------------------------------------------
 */
-
 const form = useForm({
     student_number: "",
     fullname: "",
@@ -183,7 +182,6 @@ const form = useForm({
 | Reset Form
 |--------------------------------------------------------------------------
 */
-
 const resetForm = () => {
     form.reset();
     editMode.value = false;
@@ -195,7 +193,6 @@ const resetForm = () => {
 | Filter Sections based on Course
 |--------------------------------------------------------------------------
 */
-
 const filteredSections = computed(() => {
     if (!form.course_id) return [];
 
@@ -209,7 +206,6 @@ const filteredSections = computed(() => {
 | Watch Course Change
 |--------------------------------------------------------------------------
 */
-
 watch(
     () => form.course_id,
     () => {
@@ -222,7 +218,6 @@ watch(
 | EDIT STUDENT
 |--------------------------------------------------------------------------
 */
-
 const editStudent = (student: Student) => {
     editMode.value = true;
     open.value = true;
@@ -243,7 +238,6 @@ const editStudent = (student: Student) => {
 | DELETE STUDENT
 |--------------------------------------------------------------------------
 */
-
 const deleteStudent = (id: number) => {
     if (confirm("Are you sure you want to delete this student?")) {
         form.delete(route("students.destroy", id), {
@@ -257,7 +251,6 @@ const deleteStudent = (id: number) => {
 | SUBMIT (ADD / UPDATE)
 |--------------------------------------------------------------------------
 */
-
 const submit = () => {
     if (editMode.value && selectedStudentId.value) {
         form.put(route("students.update", selectedStudentId.value), {
@@ -284,7 +277,6 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <div class="p-4 space-y-6">
-            <!-- CARD -->
             <Card>
                 <CardHeader>
                     <div class="flex justify-between items-center">
@@ -306,6 +298,7 @@ const submit = () => {
                     <!-- FILTERS -->
                     <div class="flex justify-between gap-4">
                         <div class="flex gap-4 w-full">
+                            <!-- SEARCH -->
                             <div class="relative w-full max-w-sm">
                                 <Search
                                     class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
@@ -316,10 +309,20 @@ const submit = () => {
                                     class="pl-10"
                                 />
                             </div>
-
+                            <!-- YEAR LEVEL  -->
+                            <select
+                                v-model="selectedYear"
+                                class="border px-3 py-2 rounded-md w-36"
+                            >
+                                <option value="">All Year Levels</option>
+                                <option v-for="y in years" :key="y" :value="y">
+                                    {{ y }}
+                                </option>
+                            </select>
+                            <!-- COURSE -->
                             <select
                                 v-model="selectedCourse"
-                                class="border px-3 py-2 rounded-md"
+                                class="border px-3 py-2 rounded-md w-32"
                             >
                                 <option value="">All Courses</option>
                                 <option
@@ -331,9 +334,10 @@ const submit = () => {
                                 </option>
                             </select>
 
+                            <!-- SECTION -->
                             <select
                                 v-model="selectedSection"
-                                class="border px-3 py-2 rounded-md"
+                                class="border px-3 py-2 rounded-md w-36"
                             >
                                 <option value="">All Sections</option>
                                 <option
@@ -349,7 +353,7 @@ const submit = () => {
                         <!-- ADD BUTTON -->
                         <Dialog v-model:open="open">
                             <DialogTrigger as-child>
-                                <Button @click="resetForm">
+                                <Button variant="outline" @click="resetForm">
                                     <Plus class="w-4 h-4 mr-2" />
                                     Enroll Student
                                 </Button>
@@ -442,6 +446,7 @@ const submit = () => {
                                 <TableHead>Name</TableHead>
                                 <TableHead>Course</TableHead>
                                 <TableHead>Section</TableHead>
+                                <TableHead>Year Level</TableHead>
                                 <TableHead>Email</TableHead>
                                 <TableHead>Actions</TableHead>
                             </TableRow>
@@ -462,23 +467,33 @@ const submit = () => {
                                 <TableCell>{{
                                     student.section.section_name
                                 }}</TableCell>
+                                <TableCell>{{ student.year_level }}</TableCell>
                                 <TableCell>{{ student.email }}</TableCell>
 
                                 <TableCell class="flex gap-2">
                                     <Button
+                                        class="bg-yellow-400 text-white"
                                         size="sm"
                                         @click="editStudent(student)"
+                                        >Edit</Button
                                     >
-                                        Edit
-                                    </Button>
-
                                     <Button
+                                        class="bg-red-600 text-white"
                                         size="sm"
                                         variant="destructive"
                                         @click="deleteStudent(student.id)"
                                     >
                                         Delete
                                     </Button>
+                                </TableCell>
+                            </TableRow>
+
+                            <TableRow v-if="filteredStudents.length === 0">
+                                <TableCell
+                                    colspan="7"
+                                    class="text-center py-10"
+                                >
+                                    No students found
                                 </TableCell>
                             </TableRow>
                         </TableBody>

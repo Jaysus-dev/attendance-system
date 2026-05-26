@@ -63,15 +63,26 @@ class CourseController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, Course $course)
-    {
-        //
-    }
+{
+    $validated = $request->validate([
+        'department_code' => 'required',
+        'department_name' => 'required',
+        'course_code' => 'required',
+        'course_name' => 'required',
+    ]);
+
+    $course->update($validated);
+
+    return back()->with('success', 'Course updated successfully.');
+}
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Course $course)
-    {
-        //
-    }
+{
+    $course->delete();
+
+    return back()->with('success', 'Course deleted successfully.');
+}
 }

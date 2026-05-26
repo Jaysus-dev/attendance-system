@@ -40,6 +40,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     ->name('courses');
     Route::post('/courses', [CourseController::class, 'store'])
     ->name('courses.store');
+    Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
+    Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->name('courses.destroy');
+
 
 
     Route::get('/subjects', [SubjectController::class, 'index'])

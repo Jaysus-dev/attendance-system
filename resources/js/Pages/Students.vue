@@ -211,44 +211,39 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <div class="p-6 space-y-6">
-            <!-- Header -->
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-3xl font-bold">Students</h1>
-
-                    <p class="text-muted-foreground">Manage students</p>
-                </div>
-            </div>
-
-            <!-- Stats -->
-            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                    <CardHeader
-                        class="flex flex-row items-center justify-between pb-2"
-                    >
-                        <CardTitle class="text-sm"> Total Students </CardTitle>
-
-                        <Users class="w-4 h-4" />
-                    </CardHeader>
-
-                    <CardContent>
-                        <div class="text-2xl font-bold">
-                            {{ totalStudents }}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
             <!-- Records -->
             <Card>
                 <CardHeader>
-                    <CardTitle> Student Records </CardTitle>
+                    <div class="flex items-center justify-between">
+                        <!-- Left Side -->
+                        <div>
+                            <CardTitle>Student Records</CardTitle>
 
-                    <CardDescription>
-                        Search and filter students
-                    </CardDescription>
+                            <CardDescription>
+                                Search and filter students
+                            </CardDescription>
+                        </div>
+
+                        <!-- Right Side -->
+                        <div class="w-[220px]">
+                            <CardHeader
+                                class="flex flex-row items-center justify-between p-4 pb-0"
+                            >
+                                <CardTitle class="text-sm font-medium">
+                                    Total Students
+                                </CardTitle>
+
+                                <Users class="w-4 h-4 text-muted-foreground" />
+                            </CardHeader>
+
+                            <CardContent class="p-4 pt-0">
+                                <div class="text-2xl font-bold">
+                                    {{ totalStudents }}
+                                </div>
+                            </CardContent>
+                        </div>
+                    </div>
                 </CardHeader>
-
                 <CardContent class="space-y-4">
                     <!-- Filters -->
                     <div class="flex justify-between">
@@ -269,7 +264,7 @@ const submit = () => {
                             <!-- Course -->
                             <select
                                 v-model="selectedCourse"
-                                class="border rounded-md px-3 py-2"
+                                class="border rounded-md px-3 py-2 w-full max-w-32"
                             >
                                 <option value="">All Courses</option>
 
@@ -285,7 +280,7 @@ const submit = () => {
                             <!-- Section -->
                             <select
                                 v-model="selectedSection"
-                                class="border rounded-md px-3 py-2"
+                                class="border rounded-md px-3 py-2 w-full max-w-32"
                             >
                                 <option value="">All Sections</option>
 

@@ -40,7 +40,12 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 |--------------------------------------------------------------------------
 */
 
+type Teacher = {
+    id: number;
+    fullname: string;
+};
 type Subject = {
+    teacher: any;
     id: number;
     subject_code: string;
     subject_name: string;
@@ -48,6 +53,7 @@ type Subject = {
 
 const props = defineProps<{
     subjects: Subject[];
+    teachers: Teacher[];
 }>();
 
 /*
@@ -87,6 +93,7 @@ const open = ref(false);
 const form = useForm({
     subject_code: "",
     subject_name: "",
+    teacher_id: "",
 });
 
 /*
@@ -176,6 +183,20 @@ const submit = () => {
                                         v-model="form.subject_name"
                                         placeholder="Subject Name"
                                     />
+                                    <!-- 👇 TEACHER SELECT -->
+                                    <select
+                                        v-model="form.teacher_id"
+                                        class="w-full border px-3 py-2 rounded-md"
+                                    >
+                                        <option value="">Select Teacher</option>
+                                        <option
+                                            v-for="t in props.teachers"
+                                            :key="t.id"
+                                            :value="t.id"
+                                        >
+                                            {{ t.fullname }}
+                                        </option>
+                                    </select>
 
                                     <Button type="submit" class="w-full">
                                         Save Subject
@@ -192,6 +213,7 @@ const submit = () => {
                                 <TableRow>
                                     <TableHead>Subject Code</TableHead>
                                     <TableHead>Subject Name</TableHead>
+                                    <TableHead>Teacher</TableHead>
                                 </TableRow>
                             </TableHeader>
 
@@ -206,6 +228,13 @@ const submit = () => {
 
                                     <TableCell>
                                         {{ subject.subject_name }}
+                                    </TableCell>
+                                    <TableCell>
+                                        {{
+                                            subject.teacher
+                                                ? subject.teacher.fullname
+                                                : "No teacher assigned"
+                                        }}
                                     </TableCell>
                                 </TableRow>
 

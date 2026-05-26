@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useForm } from "@inertiajs/vue3";
+import { useForm, Head } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 
 /*
@@ -57,6 +57,7 @@ const submit = () => {
 </script>
 
 <template>
+    <Head title="Assignments" />
     <AuthenticatedLayout>
         <div class="p-6 space-y-6">
             <!-- HEADER -->

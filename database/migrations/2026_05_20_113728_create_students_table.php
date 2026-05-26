@@ -22,6 +22,7 @@ return new class extends Migration
             $table->foreignId('section_id')
                 ->constrained();
             $table->string('year_level');
+            $table->timestamps();
         });
     }
 

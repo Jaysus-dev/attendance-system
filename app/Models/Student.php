@@ -6,6 +6,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
 {
+    protected $fillable = [
+
+        'student_number',
+
+        'fullname',
+
+        'email',
+
+        'parent_email',
+
+        'course_id',
+
+        'section_id',
+
+        'year_level',
+    ];
+
     public function course()
 {
     return $this->belongsTo(Course::class);

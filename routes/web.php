@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StudentController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -19,9 +20,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
-    Route::get('/students', function () {
-        return Inertia::render('Students');
-    })->name('students');
+    Route::get('/students', [
+        StudentController::class,
+        'index',
+    ])->name('students');
+
+    Route::post('/students', [
+        StudentController::class,
+        'store',
+    ])->name('students.store');
+
     Route::get('/teachers', function () {
         return Inertia::render('Teachers');
     })->name('teachers');

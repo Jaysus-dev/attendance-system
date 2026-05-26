@@ -2,64 +2,86 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Course;
+use App\Models\Section;
 use App\Models\Student;
+
 use Illuminate\Http\Request;
+
+use Inertia\Inertia;
 
 class StudentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Display Students
+    |--------------------------------------------------------------------------
+    */
+
     public function index()
     {
-        //
+        return Inertia::render('Students', [
+
+            'students' => Student::with([
+                'course',
+                'section',
+            ])->latest()->get(),
+            'courses' => Course::all(),
+            'sections' => Section::all(),
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Store Student
+    |--------------------------------------------------------------------------
+    */
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
-    }
+        $validated = $request->validate([
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Student $student)
-    {
-        //
-    }
+            'student_number' => [
+                'required',
+                'unique:students,student_number',
+            ],
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Student $student)
-    {
-        //
-    }
+            'fullname' => [
+                'required',
+                'string',
+                'max:255',
+            ],
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Student $student)
-    {
-        //
-    }
+            'email' => [
+                'required',
+                'email',
+                'unique:students,email',
+            ],
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Student $student)
-    {
-        //
+            'parent_email' => [
+                'required',
+                'email',
+            ],
+
+            'course_id' => [
+                'required',
+                'exists:courses,id',
+            ],
+
+            'section_id' => [
+                'required',
+                'exists:sections,id',
+            ],
+
+            'year_level' => [
+                'required',
+            ],
+        ]);
+
+        Student::create($validated);
+
+        return redirect()->back()->with([
+            'success' => 'Student added successfully.',
+        ]);
     }
 }

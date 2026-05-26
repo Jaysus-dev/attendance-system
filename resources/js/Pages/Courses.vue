@@ -41,6 +41,8 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 */
 
 type Course = {
+    department_name: string;
+    department_code: string;
     id: number;
     course_code: string;
     course_name: string;
@@ -85,6 +87,8 @@ const open = ref(false);
 */
 
 const form = useForm({
+    department_code: "",
+    department_name: "",
     course_code: "",
     course_name: "",
 });
@@ -167,6 +171,17 @@ const submit = () => {
                                     @submit.prevent="submit"
                                     class="space-y-4"
                                 >
+                                    <!-- Department -->
+                                    <Input
+                                        v-model="form.department_code"
+                                        placeholder="Department Code (e.g. CBEA)"
+                                    />
+
+                                    <Input
+                                        v-model="form.department_name"
+                                        placeholder="Department Name (e.g. College of Business...)"
+                                    />
+
                                     <Input
                                         v-model="form.course_code"
                                         placeholder="Course Code (e.g. BSIT)"
@@ -190,6 +205,7 @@ const submit = () => {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead>Department</TableHead>
                                     <TableHead>Course Code</TableHead>
                                     <TableHead>Course Name</TableHead>
                                 </TableRow>
@@ -200,6 +216,10 @@ const submit = () => {
                                     v-for="course in filteredCourses"
                                     :key="course.id"
                                 >
+                                    <TableCell>
+                                        {{ course.department_name }}
+                                        - {{ course.department_code }}
+                                    </TableCell>
                                     <TableCell class="font-medium">
                                         {{ course.course_code }}
                                     </TableCell>

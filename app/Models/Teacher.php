@@ -16,8 +16,6 @@ class Teacher extends Model
 
         'course_id',
 
-        'department',
-
         'position',
     ];
 

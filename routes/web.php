@@ -30,11 +30,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
     Route::delete('/students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
 
-    Route::get('/teachers', [TeacherController::class, 'index'])
-    ->name('teachers');
-
-    Route::post('/teachers', [TeacherController::class, 'store'])
-    ->name('teachers.store');
+    Route::get('/teachers', [TeacherController::class, 'index'])->name('teachers');
+    Route::post('/teachers', [TeacherController::class, 'store'])->name('teachers.store');
+    Route::put('/teachers/{teacher}', [TeacherController::class, 'update'])->name('teachers.update');
+    Route::delete('/teachers/{teacher}', [TeacherController::class, 'destroy'])->name('teachers.destroy');
 
 
     Route::get('/courses', [CourseController::class, 'index'])

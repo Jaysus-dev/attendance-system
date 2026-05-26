@@ -25,8 +25,6 @@ return new class extends Migration
                 ->constrained()
                 ->onDelete('cascade');
 
-            $table->string('department');
-
             $table->string('position');
 
             $table->timestamps();

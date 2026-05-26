@@ -1,9 +1,4 @@
 <script setup lang="ts">
-/*
-|--------------------------------------------------------------------------
-| Imports
-|--------------------------------------------------------------------------
-*/
 import {
     Card,
     CardContent,
@@ -21,7 +16,6 @@ import {
 } from "@/Components/ui/dialog";
 
 import { Head, useForm } from "@inertiajs/vue3";
-
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 
@@ -35,9 +29,7 @@ import {
 } from "@/Components/ui/table";
 
 import { Users, Search, Plus } from "lucide-vue-next";
-
 import { computed, ref } from "vue";
-
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 
 /*
@@ -49,6 +41,8 @@ type Course = {
     id: number;
     course_code: string;
     course_name: string;
+    department_code: string;
+    department_name: string;
 };
 
 type Teacher = {
@@ -56,14 +50,8 @@ type Teacher = {
     employee_number: string;
     fullname: string;
     email: string;
-    department: string;
     position: string;
-
-    course: {
-        id: number;
-        course_code: string;
-        course_name: string;
-    };
+    course: Course;
 };
 
 /*
@@ -74,6 +62,7 @@ type Teacher = {
 const props = defineProps<{
     teachers: Teacher[];
     courses: Course[];
+    positions: string[];
 }>();
 
 /*
@@ -84,25 +73,23 @@ const props = defineProps<{
 const search = ref("");
 const selectedCourse = ref("");
 
-const courses = computed(() => {
+const courseOptions = computed(() => {
     return [...new Set(props.teachers.map((t) => t.course.course_code))];
 });
 
 /*
 |--------------------------------------------------------------------------
-| Filtered Teachers
+| FILTERED DATA
 |--------------------------------------------------------------------------
 */
 const filteredTeachers = computed(() => {
     return props.teachers.filter((teacher) => {
+        const q = search.value.toLowerCase();
+
         const matchesSearch =
-            teacher.fullname
-                .toLowerCase()
-                .includes(search.value.toLowerCase()) ||
-            teacher.employee_number
-                .toLowerCase()
-                .includes(search.value.toLowerCase()) ||
-            teacher.email.toLowerCase().includes(search.value.toLowerCase());
+            teacher.fullname.toLowerCase().includes(q) ||
+            teacher.employee_number.toLowerCase().includes(q) ||
+            teacher.email.toLowerCase().includes(q);
 
         const matchesCourse =
             !selectedCourse.value ||
@@ -114,14 +101,7 @@ const filteredTeachers = computed(() => {
 
 /*
 |--------------------------------------------------------------------------
-| Stats
-|--------------------------------------------------------------------------
-*/
-const totalTeachers = computed(() => props.teachers.length);
-
-/*
-|--------------------------------------------------------------------------
-| Dialog + Edit State
+| Dialog State
 |--------------------------------------------------------------------------
 */
 const open = ref(false);
@@ -130,7 +110,7 @@ const selectedTeacherId = ref<number | null>(null);
 
 /*
 |--------------------------------------------------------------------------
-| Form
+| FORM (NO department here)
 |--------------------------------------------------------------------------
 */
 const form = useForm({
@@ -138,42 +118,49 @@ const form = useForm({
     fullname: "",
     email: "",
     course_id: "",
-    department: "",
     position: "",
 });
 
 /*
 |--------------------------------------------------------------------------
-| Reset
+| RESET FORM
 |--------------------------------------------------------------------------
 */
 const resetForm = () => {
-    form.reset();
+    form.clearErrors();
+
+    form.employee_number = "";
+    form.fullname = "";
+    form.email = "";
+    form.course_id = "";
+    form.position = "";
+
     editMode.value = false;
     selectedTeacherId.value = null;
 };
 
 /*
 |--------------------------------------------------------------------------
-| Edit Teacher
+| EDIT TEACHER
 |--------------------------------------------------------------------------
 */
 const editTeacher = (teacher: Teacher) => {
     editMode.value = true;
-    open.value = true;
     selectedTeacherId.value = teacher.id;
+    open.value = true;
+
+    form.clearErrors();
 
     form.employee_number = teacher.employee_number;
     form.fullname = teacher.fullname;
     form.email = teacher.email;
     form.course_id = String(teacher.course.id);
-    form.department = teacher.department;
     form.position = teacher.position;
 };
 
 /*
 |--------------------------------------------------------------------------
-| Delete Teacher
+| DELETE
 |--------------------------------------------------------------------------
 */
 const deleteTeacher = (id: number) => {
@@ -186,7 +173,7 @@ const deleteTeacher = (id: number) => {
 
 /*
 |--------------------------------------------------------------------------
-| Submit (Add / Update)
+| SUBMIT
 |--------------------------------------------------------------------------
 */
 const submit = () => {
@@ -208,6 +195,13 @@ const submit = () => {
         });
     }
 };
+
+/*
+|--------------------------------------------------------------------------
+| Stats
+|--------------------------------------------------------------------------
+*/
+const totalTeachers = computed(() => props.teachers.length);
 </script>
 
 <template>
@@ -220,7 +214,7 @@ const submit = () => {
                     <div class="flex justify-between items-center">
                         <div>
                             <CardTitle>Teacher Records</CardTitle>
-                            <CardDescription>Manage teachers</CardDescription>
+                            <CardDescription> Manage teachers </CardDescription>
                         </div>
 
                         <div
@@ -234,8 +228,9 @@ const submit = () => {
 
                 <CardContent class="space-y-4">
                     <!-- FILTERS -->
-                    <div class="flex justify-between gap-4">
-                        <div class="flex gap-4 w-full">
+                    <div class="flex justify-between">
+                        <div class="flex gap-4">
+                            <!-- SEARCH -->
                             <div class="relative w-full max-w-sm">
                                 <Search
                                     class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
@@ -247,13 +242,14 @@ const submit = () => {
                                 />
                             </div>
 
+                            <!-- COURSE FILTER -->
                             <select
                                 v-model="selectedCourse"
-                                class="border px-3 py-2 rounded-md w-40"
+                                class="border px-3 py-2 rounded-md w-48"
                             >
                                 <option value="">All Courses</option>
                                 <option
-                                    v-for="c in courses"
+                                    v-for="c in courseOptions"
                                     :key="c"
                                     :value="c"
                                 >
@@ -262,7 +258,7 @@ const submit = () => {
                             </select>
                         </div>
 
-                        <!-- ADD / EDIT -->
+                        <!-- ADD -->
                         <Dialog v-model:open="open">
                             <DialogTrigger as-child>
                                 <Button @click="resetForm">
@@ -290,37 +286,49 @@ const submit = () => {
                                         v-model="form.employee_number"
                                         placeholder="Employee Number"
                                     />
+
                                     <Input
                                         v-model="form.fullname"
                                         placeholder="Fullname"
                                     />
+
                                     <Input
                                         v-model="form.email"
                                         placeholder="Email"
                                     />
 
+                                    <!-- COURSE -->
                                     <select
                                         v-model="form.course_id"
                                         class="w-full border px-3 py-2 rounded-md"
                                     >
-                                        <option value="">Select Course</option>
+                                        <option value="">
+                                            Select Department
+                                        </option>
                                         <option
                                             v-for="c in props.courses"
                                             :key="c.id"
                                             :value="c.id"
                                         >
-                                            {{ c.course_code }}
+                                            {{ c.department_code }}
                                         </option>
                                     </select>
 
-                                    <Input
-                                        v-model="form.department"
-                                        placeholder="Department"
-                                    />
-                                    <Input
+                                    <select
                                         v-model="form.position"
-                                        placeholder="Position"
-                                    />
+                                        class="w-full border px-3 py-2 rounded-md"
+                                    >
+                                        <option value="">
+                                            Select Position
+                                        </option>
+                                        <option
+                                            v-for="p in props.positions"
+                                            :key="p"
+                                            :value="p"
+                                        >
+                                            {{ p }}
+                                        </option>
+                                    </select>
 
                                     <Button type="submit" class="w-full">
                                         {{ editMode ? "Update" : "Save" }}
@@ -336,7 +344,6 @@ const submit = () => {
                             <TableRow>
                                 <TableHead>Employee #</TableHead>
                                 <TableHead>Name</TableHead>
-                                <TableHead>Course</TableHead>
                                 <TableHead>Department</TableHead>
                                 <TableHead>Position</TableHead>
                                 <TableHead>Email</TableHead>
@@ -354,25 +361,22 @@ const submit = () => {
                                 }}</TableCell>
                                 <TableCell>{{ teacher.fullname }}</TableCell>
                                 <TableCell>{{
-                                    teacher.course.course_code
+                                    teacher.course.department_code
                                 }}</TableCell>
-                                <TableCell>{{ teacher.department }}</TableCell>
                                 <TableCell>{{ teacher.position }}</TableCell>
                                 <TableCell>{{ teacher.email }}</TableCell>
 
                                 <TableCell class="flex gap-2">
-                                    <!-- EDIT -->
                                     <Button
-                                        class="bg-yellow-500 text-white hover:bg-yellow-600"
+                                        class="bg-yellow-500 text-white"
                                         size="sm"
                                         @click="editTeacher(teacher)"
                                     >
                                         Edit
                                     </Button>
 
-                                    <!-- DELETE -->
                                     <Button
-                                        class="bg-red-600 text-white hover:bg-red-700"
+                                        class="bg-red-600 text-white"
                                         size="sm"
                                         @click="deleteTeacher(teacher.id)"
                                     >

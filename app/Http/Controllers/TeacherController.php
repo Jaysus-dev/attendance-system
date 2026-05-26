@@ -11,11 +11,21 @@ use Inertia\Inertia;
 
 class TeacherController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Display Teachers
-    |--------------------------------------------------------------------------
-    */
+    private array $positions = [
+        'Instructor',
+        'Assistant Instructor',
+        'Lecturer',
+        'Assistant Professor',
+        'Associate Professor',
+        'Professor',
+        'Department Chair',
+        'Program Head',
+        'Dean',
+        'Part-time Instructor',
+        'Visiting Lecturer',
+        'Lab Instructor',
+        'Research Assistant',
+    ];
 
     public function index()
     {
@@ -26,6 +36,7 @@ class TeacherController extends Controller
                 ->get(),
 
             'courses' => Course::all(),
+            'positions' => $this->positions,
         ]);
     }
 
@@ -59,9 +70,6 @@ class TeacherController extends Controller
                 'exists:courses,id',
             ],
 
-            'department' => [
-                'required',
-            ],
 
             'position' => [
                 'required',
@@ -73,5 +81,47 @@ class TeacherController extends Controller
         return redirect()->back()->with([
             'success' => 'Teacher added successfully.',
         ]);
+    }
+    public function update(Request $request, Teacher $teacher)
+    {
+        $validated = $request->validate([
+            'employee_number' => [
+                'required',
+                'unique:teachers,employee_number,' . $teacher->id,
+            ],
+
+            'fullname' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'email' => [
+                'required',
+                'email',
+                'unique:teachers,email,' . $teacher->id,
+            ],
+
+            'course_id' => [
+                'required',
+                'exists:courses,id',
+            ],
+
+            'position' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+        ]);
+
+        $teacher->update($validated);
+
+        return back()->with('success', 'Teacher updated successfully.');
+    }
+    public function destroy(Teacher $teacher)
+    {
+        $teacher->delete();
+
+        return back()->with('success', 'Teacher deleted successfully.');
     }
 }

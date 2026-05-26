@@ -277,22 +277,14 @@ const submit = () => {
                         </div>
 
                         <!-- Right -->
-                        <div class="w-[220px]">
-                            <CardHeader
-                                class="flex flex-row items-center justify-between p-4 pb-0"
-                            >
-                                <CardTitle class="text-sm font-medium">
-                                    Total Students
-                                </CardTitle>
 
-                                <Users class="w-4 h-4 text-muted-foreground" />
-                            </CardHeader>
-
-                            <CardContent class="p-4 pt-0">
-                                <div class="text-2xl font-bold">
-                                    {{ totalStudents }}
-                                </div>
-                            </CardContent>
+                        <div
+                            class="flex items-center gap-2 text-muted-foreground"
+                        >
+                            <Users class="w-4 h-4 text-muted-foreground" />
+                            <span class="text-sm">
+                                Total: {{ totalStudents }}
+                            </span>
                         </div>
                     </div>
                 </CardHeader>

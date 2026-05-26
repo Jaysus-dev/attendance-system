@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\SubjectController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -45,9 +46,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     ->name('courses.store');
 
 
-    Route::get('/subjects', function () {
-        return Inertia::render('Subjects');
-    })->name('subjects');
+    Route::get('/subjects', [SubjectController::class, 'index'])
+    ->name('subjects');
+    Route::post('/subjects', [SubjectController::class, 'store'])
+    ->name('subjects.store');
+
+
     Route::get('/attendance', function () {
         return Inertia::render('Attendance');
     })->name('attendance');

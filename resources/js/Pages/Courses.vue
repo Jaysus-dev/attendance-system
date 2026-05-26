@@ -342,7 +342,7 @@ const totalCourses = computed(() => props.courses.length);
                     </div>
 
                     <!-- TABLE -->
-                    <div class="rounded-md border overflow-hidden">
+                    <div class="overflow-hidden">
                         <Table>
                             <TableHeader>
                                 <TableRow>

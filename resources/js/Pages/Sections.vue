@@ -253,7 +253,7 @@ const submit = () => {
                     </div>
 
                     <!-- TABLE -->
-                    <div class="rounded-md border overflow-hidden">
+                    <div class="overflow-hidden">
                         <Table>
                             <TableHeader>
                                 <TableRow>

@@ -24,7 +24,6 @@ import {
 import { Head, useForm } from "@inertiajs/vue3";
 
 import { Button } from "@/Components/ui/button";
-
 import { Input } from "@/Components/ui/input";
 
 import {
@@ -50,46 +49,32 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 
 type Course = {
     id: number;
-
     course_code: string;
-
     course_name: string;
 };
 
 type Section = {
     id: number;
-
     course_id: number;
-
     section_name: string;
 };
 
 type Student = {
     id: number;
-
     student_number: string;
-
     fullname: string;
-
     email: string;
-
     parent_email: string;
-
     year_level: string;
 
     course: {
         id: number;
-
         course_code: string;
-
         course_name: string;
     };
 
     section: {
         id: number;
-
-        course_id: number;
-
         section_name: string;
     };
 };
@@ -102,9 +87,7 @@ type Student = {
 
 const props = defineProps<{
     students: Student[];
-
     courses: Course[];
-
     sections: Section[];
 }>();
 
@@ -115,9 +98,7 @@ const props = defineProps<{
 */
 
 const search = ref("");
-
 const selectedCourse = ref("");
-
 const selectedSection = ref("");
 
 /*
@@ -127,17 +108,11 @@ const selectedSection = ref("");
 */
 
 const courses = computed(() => {
-    return [
-        ...new Set(props.students.map((student) => student.course.course_code)),
-    ];
+    return [...new Set(props.students.map((s) => s.course.course_code))];
 });
 
 const sections = computed(() => {
-    return [
-        ...new Set(
-            props.students.map((student) => student.section.section_name),
-        ),
-    ];
+    return [...new Set(props.students.map((s) => s.section.section_name))];
 });
 
 /*
@@ -171,7 +146,7 @@ const filteredStudents = computed(() => {
 
 /*
 |--------------------------------------------------------------------------
-| Statistics
+| Stats
 |--------------------------------------------------------------------------
 */
 
@@ -179,11 +154,13 @@ const totalStudents = computed(() => props.students.length);
 
 /*
 |--------------------------------------------------------------------------
-| Modal
+| Dialog State
 |--------------------------------------------------------------------------
 */
 
 const open = ref(false);
+const editMode = ref(false);
+const selectedStudentId = ref<number | null>(null);
 
 /*
 |--------------------------------------------------------------------------
@@ -193,46 +170,48 @@ const open = ref(false);
 
 const form = useForm({
     student_number: "",
-
     fullname: "",
-
     email: "",
-
     parent_email: "",
-
     course_id: "",
-
     section_id: "",
-
     year_level: "",
 });
 
 /*
 |--------------------------------------------------------------------------
-| Filter Sections Based On Selected Course
+| Reset Form
+|--------------------------------------------------------------------------
+*/
+
+const resetForm = () => {
+    form.reset();
+    editMode.value = false;
+    selectedStudentId.value = null;
+};
+
+/*
+|--------------------------------------------------------------------------
+| Filter Sections based on Course
 |--------------------------------------------------------------------------
 */
 
 const filteredSections = computed(() => {
-    // No course selected
-    if (!form.course_id) {
-        return [];
-    }
+    if (!form.course_id) return [];
 
-    return props.sections.filter((section) => {
-        return section.course_id === Number(form.course_id);
-    });
+    return props.sections.filter(
+        (section) => section.course_id === Number(form.course_id),
+    );
 });
 
 /*
 |--------------------------------------------------------------------------
-| Reset Section When Course Changes
+| Watch Course Change
 |--------------------------------------------------------------------------
 */
 
 watch(
     () => form.course_id,
-
     () => {
         form.section_id = "";
     },
@@ -240,20 +219,63 @@ watch(
 
 /*
 |--------------------------------------------------------------------------
-| Submit
+| EDIT STUDENT
+|--------------------------------------------------------------------------
+*/
+
+const editStudent = (student: Student) => {
+    editMode.value = true;
+    open.value = true;
+
+    selectedStudentId.value = student.id;
+
+    form.student_number = student.student_number;
+    form.fullname = student.fullname;
+    form.email = student.email;
+    form.parent_email = student.parent_email;
+    form.course_id = String(student.course.id);
+    form.section_id = String(student.section.id);
+    form.year_level = student.year_level;
+};
+
+/*
+|--------------------------------------------------------------------------
+| DELETE STUDENT
+|--------------------------------------------------------------------------
+*/
+
+const deleteStudent = (id: number) => {
+    if (confirm("Are you sure you want to delete this student?")) {
+        form.delete(route("students.destroy", id), {
+            preserveScroll: true,
+        });
+    }
+};
+
+/*
+|--------------------------------------------------------------------------
+| SUBMIT (ADD / UPDATE)
 |--------------------------------------------------------------------------
 */
 
 const submit = () => {
-    form.post(route("students.store"), {
-        preserveScroll: true,
-
-        onSuccess: () => {
-            form.reset();
-
-            open.value = false;
-        },
-    });
+    if (editMode.value && selectedStudentId.value) {
+        form.put(route("students.update", selectedStudentId.value), {
+            preserveScroll: true,
+            onSuccess: () => {
+                resetForm();
+                open.value = false;
+            },
+        });
+    } else {
+        form.post(route("students.store"), {
+            preserveScroll: true,
+            onSuccess: () => {
+                resetForm();
+                open.value = false;
+            },
+        });
+    }
 };
 </script>
 
@@ -262,45 +284,32 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <div class="p-4 space-y-6">
-            <!-- Main Card -->
+            <!-- CARD -->
             <Card>
-                <!-- Header -->
                 <CardHeader>
-                    <div class="flex items-center justify-between">
-                        <!-- Left -->
+                    <div class="flex justify-between items-center">
                         <div>
-                            <CardTitle> Student Records </CardTitle>
-
-                            <CardDescription>
-                                Search and filter students
-                            </CardDescription>
+                            <CardTitle>Student Records</CardTitle>
+                            <CardDescription>Manage students</CardDescription>
                         </div>
-
-                        <!-- Right -->
 
                         <div
                             class="flex items-center gap-2 text-muted-foreground"
                         >
-                            <Users class="w-4 h-4 text-muted-foreground" />
-                            <span class="text-sm">
-                                Total: {{ totalStudents }}
-                            </span>
+                            <Users class="w-4 h-4" />
+                            <span>Total: {{ totalStudents }}</span>
                         </div>
                     </div>
                 </CardHeader>
 
-                <!-- Content -->
                 <CardContent class="space-y-4">
-                    <!-- Filters -->
-                    <div class="flex justify-between">
-                        <!-- Left -->
+                    <!-- FILTERS -->
+                    <div class="flex justify-between gap-4">
                         <div class="flex gap-4 w-full">
-                            <!-- Search -->
                             <div class="relative w-full max-w-sm">
                                 <Search
-                                    class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
+                                    class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
                                 />
-
                                 <Input
                                     v-model="search"
                                     placeholder="Search..."
@@ -308,217 +317,172 @@ const submit = () => {
                                 />
                             </div>
 
-                            <!-- Course Filter -->
                             <select
                                 v-model="selectedCourse"
-                                class="border rounded-md px-3 py-2 w-full max-w-40"
+                                class="border px-3 py-2 rounded-md"
                             >
                                 <option value="">All Courses</option>
-
                                 <option
-                                    v-for="course in courses"
-                                    :key="course"
-                                    :value="course"
+                                    v-for="c in courses"
+                                    :key="c"
+                                    :value="c"
                                 >
-                                    {{ course }}
+                                    {{ c }}
                                 </option>
                             </select>
 
-                            <!-- Section Filter -->
                             <select
                                 v-model="selectedSection"
-                                class="border rounded-md px-3 py-2 w-full max-w-40"
+                                class="border px-3 py-2 rounded-md"
                             >
                                 <option value="">All Sections</option>
-
                                 <option
-                                    v-for="section in sections"
-                                    :key="section"
-                                    :value="section"
+                                    v-for="s in sections"
+                                    :key="s"
+                                    :value="s"
                                 >
-                                    {{ section }}
+                                    {{ s }}
                                 </option>
                             </select>
                         </div>
 
-                        <!-- Add Student -->
+                        <!-- ADD BUTTON -->
                         <Dialog v-model:open="open">
                             <DialogTrigger as-child>
-                                <Button class="gap-2">
-                                    <Plus class="w-4 h-4" />
-
-                                    Add Student
+                                <Button @click="resetForm">
+                                    <Plus class="w-4 h-4 mr-2" />
+                                    Enroll Student
                                 </Button>
                             </DialogTrigger>
 
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle> Add Student </DialogTitle>
+                                    <DialogTitle>
+                                        {{
+                                            editMode
+                                                ? "Edit Student"
+                                                : "Add Student"
+                                        }}
+                                    </DialogTitle>
                                 </DialogHeader>
 
-                                <!-- Form -->
                                 <form
                                     @submit.prevent="submit"
-                                    class="space-y-4"
+                                    class="space-y-3"
                                 >
-                                    <!-- Student Number -->
                                     <Input
                                         v-model="form.student_number"
                                         placeholder="Student Number"
                                     />
-
-                                    <!-- Fullname -->
                                     <Input
                                         v-model="form.fullname"
                                         placeholder="Fullname"
                                     />
-
-                                    <!-- Email -->
                                     <Input
                                         v-model="form.email"
                                         placeholder="Email"
                                     />
-
-                                    <!-- Parent Email -->
                                     <Input
                                         v-model="form.parent_email"
                                         placeholder="Parent Email"
                                     />
 
-                                    <!-- Course -->
                                     <select
                                         v-model="form.course_id"
-                                        class="w-full border rounded-md px-3 py-2"
+                                        class="w-full border px-3 py-2 rounded-md"
                                     >
                                         <option value="">Select Course</option>
-
                                         <option
-                                            v-for="course in props.courses"
-                                            :key="course.id"
-                                            :value="course.id"
+                                            v-for="c in props.courses"
+                                            :key="c.id"
+                                            :value="c.id"
                                         >
-                                            {{ course.course_name }}
+                                            {{ c.course_name }}
                                         </option>
                                     </select>
 
-                                    <!-- Section -->
                                     <select
                                         v-model="form.section_id"
-                                        class="w-full border rounded-md px-3 py-2"
+                                        class="w-full border px-3 py-2 rounded-md"
                                     >
                                         <option value="">Select Section</option>
-
                                         <option
-                                            v-for="section in filteredSections"
-                                            :key="section.id"
-                                            :value="section.id"
+                                            v-for="s in filteredSections"
+                                            :key="s.id"
+                                            :value="s.id"
                                         >
-                                            {{ section.section_name }}
+                                            {{ s.section_name }}
                                         </option>
                                     </select>
 
-                                    <!-- Year Level -->
                                     <select
                                         v-model="form.year_level"
-                                        class="w-full border rounded-md px-3 py-2"
+                                        class="w-full border px-3 py-2 rounded-md"
                                     >
-                                        <option value="">
-                                            Select Year Level
-                                        </option>
-
-                                        <option value="1st Year">
-                                            1st Year
-                                        </option>
-
-                                        <option value="2nd Year">
-                                            2nd Year
-                                        </option>
-
-                                        <option value="3rd Year">
-                                            3rd Year
-                                        </option>
-
-                                        <option value="4th Year">
-                                            4th Year
-                                        </option>
+                                        <option value="">Year Level</option>
+                                        <option>1st Year</option>
+                                        <option>2nd Year</option>
+                                        <option>3rd Year</option>
+                                        <option>4th Year</option>
                                     </select>
 
-                                    <!-- Submit -->
                                     <Button type="submit" class="w-full">
-                                        Save Student
+                                        {{ editMode ? "Update" : "Save" }}
                                     </Button>
                                 </form>
                             </DialogContent>
                         </Dialog>
                     </div>
 
-                    <!-- Table -->
-                    <div class="rounded-md border overflow-hidden">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead> Student Number </TableHead>
+                    <!-- TABLE -->
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Student #</TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Course</TableHead>
+                                <TableHead>Section</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
 
-                                    <TableHead> Fullname </TableHead>
+                        <TableBody>
+                            <TableRow
+                                v-for="student in filteredStudents"
+                                :key="student.id"
+                            >
+                                <TableCell>{{
+                                    student.student_number
+                                }}</TableCell>
+                                <TableCell>{{ student.fullname }}</TableCell>
+                                <TableCell>{{
+                                    student.course.course_code
+                                }}</TableCell>
+                                <TableCell>{{
+                                    student.section.section_name
+                                }}</TableCell>
+                                <TableCell>{{ student.email }}</TableCell>
 
-                                    <TableHead> Course </TableHead>
-
-                                    <TableHead> Section </TableHead>
-
-                                    <TableHead> Year Level </TableHead>
-
-                                    <TableHead> Email </TableHead>
-
-                                    <TableHead> Parent Email </TableHead>
-                                </TableRow>
-                            </TableHeader>
-
-                            <TableBody>
-                                <TableRow
-                                    v-for="student in filteredStudents"
-                                    :key="student.id"
-                                >
-                                    <TableCell>
-                                        {{ student.student_number }}
-                                    </TableCell>
-
-                                    <TableCell>
-                                        {{ student.fullname }}
-                                    </TableCell>
-
-                                    <TableCell>
-                                        {{ student.course.course_code }}
-                                    </TableCell>
-
-                                    <TableCell>
-                                        {{ student.section.section_name }}
-                                    </TableCell>
-
-                                    <TableCell>
-                                        {{ student.year_level }}
-                                    </TableCell>
-
-                                    <TableCell>
-                                        {{ student.email }}
-                                    </TableCell>
-
-                                    <TableCell>
-                                        {{ student.parent_email }}
-                                    </TableCell>
-                                </TableRow>
-
-                                <!-- Empty -->
-                                <TableRow v-if="filteredStudents.length === 0">
-                                    <TableCell
-                                        colspan="7"
-                                        class="text-center py-10"
+                                <TableCell class="flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        @click="editStudent(student)"
                                     >
-                                        No students found.
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                    </div>
+                                        Edit
+                                    </Button>
+
+                                    <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        @click="deleteStudent(student.id)"
+                                    >
+                                        Delete
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div>

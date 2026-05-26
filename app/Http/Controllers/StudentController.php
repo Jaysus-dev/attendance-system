@@ -84,4 +84,26 @@ class StudentController extends Controller
             'success' => 'Student added successfully.',
         ]);
     }
+    public function update(Request $request, Student $student)
+    {
+    $validated = $request->validate([
+        'student_number' => 'required|unique:students,student_number,' . $student->id,
+        'fullname' => 'required|string|max:255',
+        'email' => 'required|email|unique:students,email,' . $student->id,
+        'parent_email' => 'required|email',
+        'course_id' => 'required|exists:courses,id',
+        'section_id' => 'required|exists:sections,id',
+        'year_level' => 'required',
+    ]);
+
+    $student->update($validated);
+
+    return back()->with('success', 'Student updated successfully.');
+    }
+    public function destroy(Student $student)
+    {
+    $student->delete();
+
+    return back()->with('success', 'Student deleted successfully.');
+    }
 }

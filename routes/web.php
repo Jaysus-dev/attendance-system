@@ -24,15 +24,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
-    Route::get('/students', [
-        StudentController::class,
-        'index',
-    ])->name('students');
-
-    Route::post('/students', [
-        StudentController::class,
-        'store',
-    ])->name('students.store');
+    //Student Page
+    Route::get('/students', [StudentController::class,'index',])->name('students');
+    Route::post('/students', [StudentController::class,'store',])->name('students.store');
+    Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
+    Route::delete('/students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
 
     Route::get('/teachers', [TeacherController::class, 'index'])
     ->name('teachers');

@@ -60,9 +60,7 @@ type Subject = {
     id: number;
     subject_code: string;
     subject_name: string;
-
     teacher: Teacher | null;
-
     course: Course | null;
 };
 
@@ -83,21 +81,18 @@ const props = defineProps<{
 |--------------------------------------------------------------------------
 */
 const search = ref("");
-
 const selectedCourse = ref("");
 
 /*
 |--------------------------------------------------------------------------
-| Course Filter Options
+| Course Filter Options (NO DUPLICATION SAFE)
 |--------------------------------------------------------------------------
 */
-const courses = computed(() => [
-    ...new Set(
-        props.subjects
-            .filter((s) => s.course)
-            .map((s) => s.course?.course_code),
-    ),
-]);
+const courses = computed(() => {
+    return [
+        ...new Set(props.subjects.map((s) => s.course?.course_code)),
+    ].filter(Boolean);
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -106,13 +101,11 @@ const courses = computed(() => [
 */
 const filteredSubjects = computed(() => {
     return props.subjects.filter((subject) => {
+        const q = search.value.toLowerCase();
+
         const matchesSearch =
-            subject.subject_code
-                .toLowerCase()
-                .includes(search.value.toLowerCase()) ||
-            subject.subject_name
-                .toLowerCase()
-                .includes(search.value.toLowerCase());
+            subject.subject_code.toLowerCase().includes(q) ||
+            subject.subject_name.toLowerCase().includes(q);
 
         const matchesCourse =
             !selectedCourse.value ||
@@ -124,14 +117,16 @@ const filteredSubjects = computed(() => {
 
 /*
 |--------------------------------------------------------------------------
-| Modal
+| Modal State
 |--------------------------------------------------------------------------
 */
 const open = ref(false);
+const editMode = ref(false);
+const selectedSubjectId = ref<number | null>(null);
 
 /*
 |--------------------------------------------------------------------------
-| Form
+| FORM
 |--------------------------------------------------------------------------
 */
 const form = useForm({
@@ -143,19 +138,73 @@ const form = useForm({
 
 /*
 |--------------------------------------------------------------------------
-| Submit
+| RESET FORM
+|--------------------------------------------------------------------------
+*/
+const resetForm = () => {
+    form.clearErrors();
+
+    form.subject_code = "";
+    form.subject_name = "";
+    form.teacher_id = "";
+    form.course_id = "";
+
+    editMode.value = false;
+    selectedSubjectId.value = null;
+};
+
+/*
+|--------------------------------------------------------------------------
+| EDIT SUBJECT
+|--------------------------------------------------------------------------
+*/
+const editSubject = (subject: Subject) => {
+    editMode.value = true;
+    selectedSubjectId.value = subject.id;
+    open.value = true;
+
+    form.subject_code = subject.subject_code;
+    form.subject_name = subject.subject_name;
+    form.teacher_id = subject.teacher?.id ? String(subject.teacher.id) : "";
+    form.course_id = subject.course?.id ? String(subject.course.id) : "";
+};
+
+/*
+|--------------------------------------------------------------------------
+| DELETE SUBJECT
+|--------------------------------------------------------------------------
+*/
+const deleteSubject = (id: number) => {
+    if (confirm("Are you sure you want to delete this subject?")) {
+        form.delete(route("subjects.destroy", id), {
+            preserveScroll: true,
+        });
+    }
+};
+
+/*
+|--------------------------------------------------------------------------
+| SUBMIT (CREATE / UPDATE)
 |--------------------------------------------------------------------------
 */
 const submit = () => {
-    form.post(route("subjects.store"), {
-        preserveScroll: true,
-
-        onSuccess: () => {
-            form.reset();
-
-            open.value = false;
-        },
-    });
+    if (editMode.value && selectedSubjectId.value) {
+        form.put(route("subjects.update", selectedSubjectId.value), {
+            preserveScroll: true,
+            onSuccess: () => {
+                resetForm();
+                open.value = false;
+            },
+        });
+    } else {
+        form.post(route("subjects.store"), {
+            preserveScroll: true,
+            onSuccess: () => {
+                resetForm();
+                open.value = false;
+            },
+        });
+    }
 };
 </script>
 
@@ -164,13 +213,12 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <div class="p-4 space-y-6">
-            <!-- HEADER -->
             <Card>
+                <!-- HEADER -->
                 <CardHeader>
                     <div class="flex items-center justify-between">
                         <div>
                             <CardTitle>Subjects</CardTitle>
-
                             <CardDescription>
                                 Manage all school subjects
                             </CardDescription>
@@ -180,10 +228,7 @@ const submit = () => {
                             class="flex items-center gap-2 text-muted-foreground"
                         >
                             <BookOpen class="w-4 h-4" />
-
-                            <span class="text-sm">
-                                Total: {{ subjects.length }}
-                            </span>
+                            <span>Total: {{ subjects.length }}</span>
                         </div>
                     </div>
                 </CardHeader>
@@ -191,14 +236,12 @@ const submit = () => {
                 <CardContent class="space-y-4">
                     <!-- SEARCH + FILTER + ADD -->
                     <div class="flex justify-between items-center gap-4">
-                        <!-- SEARCH + FILTER -->
                         <div class="flex gap-4 w-full">
                             <!-- SEARCH -->
                             <div class="relative w-full max-w-sm">
                                 <Search
                                     class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
                                 />
-
                                 <Input
                                     v-model="search"
                                     placeholder="Search subjects..."
@@ -212,13 +255,12 @@ const submit = () => {
                                 class="border px-3 py-2 rounded-md w-48"
                             >
                                 <option value="">All Courses</option>
-
                                 <option
-                                    v-for="course in courses"
-                                    :key="course"
-                                    :value="course"
+                                    v-for="c in courses"
+                                    :key="c"
+                                    :value="c"
                                 >
-                                    {{ course }}
+                                    {{ c }}
                                 </option>
                             </select>
                         </div>
@@ -226,29 +268,31 @@ const submit = () => {
                         <!-- ADD -->
                         <Dialog v-model:open="open">
                             <DialogTrigger as-child>
-                                <Button class="gap-2">
+                                <Button @click="resetForm" class="gap-2">
                                     <Plus class="w-4 h-4" />
-
                                     Add Subject
                                 </Button>
                             </DialogTrigger>
 
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle> Add Subject </DialogTitle>
+                                    <DialogTitle>
+                                        {{
+                                            editMode
+                                                ? "Edit Subject"
+                                                : "Add Subject"
+                                        }}
+                                    </DialogTitle>
                                 </DialogHeader>
 
                                 <form
                                     @submit.prevent="submit"
                                     class="space-y-4"
                                 >
-                                    <!-- SUBJECT CODE -->
                                     <Input
                                         v-model="form.subject_code"
-                                        placeholder="Subject Code (e.g. IT101)"
+                                        placeholder="Subject Code"
                                     />
-
-                                    <!-- SUBJECT NAME -->
                                     <Input
                                         v-model="form.subject_name"
                                         placeholder="Subject Name"
@@ -260,7 +304,6 @@ const submit = () => {
                                         class="w-full border px-3 py-2 rounded-md"
                                     >
                                         <option value="">Select Course</option>
-
                                         <option
                                             v-for="course in props.courses"
                                             :key="course.id"
@@ -276,7 +319,6 @@ const submit = () => {
                                         class="w-full border px-3 py-2 rounded-md"
                                     >
                                         <option value="">Select Teacher</option>
-
                                         <option
                                             v-for="t in props.teachers"
                                             :key="t.id"
@@ -287,7 +329,7 @@ const submit = () => {
                                     </select>
 
                                     <Button type="submit" class="w-full">
-                                        Save Subject
+                                        {{ editMode ? "Update" : "Save" }}
                                     </Button>
                                 </form>
                             </DialogContent>
@@ -295,64 +337,73 @@ const submit = () => {
                     </div>
 
                     <!-- TABLE -->
-                    <div class="rounded-md border overflow-hidden">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Subject Code</TableHead>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Subject Code</TableHead>
+                                <TableHead>Subject Name</TableHead>
+                                <TableHead>Course</TableHead>
+                                <TableHead>Teacher</TableHead>
+                                <TableHead>Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
 
-                                    <TableHead>Subject Name</TableHead>
+                        <TableBody>
+                            <TableRow
+                                v-for="subject in filteredSubjects"
+                                :key="subject.id"
+                            >
+                                <TableCell>{{
+                                    subject.subject_code
+                                }}</TableCell>
+                                <TableCell>{{
+                                    subject.subject_name
+                                }}</TableCell>
 
-                                    <TableHead>Course</TableHead>
+                                <TableCell>
+                                    {{
+                                        subject.course?.course_code ??
+                                        "No course"
+                                    }}
+                                </TableCell>
 
-                                    <TableHead>Teacher</TableHead>
-                                </TableRow>
-                            </TableHeader>
+                                <TableCell>
+                                    {{
+                                        subject.teacher?.fullname ??
+                                        "No teacher"
+                                    }}
+                                </TableCell>
 
-                            <TableBody>
-                                <TableRow
-                                    v-for="subject in filteredSubjects"
-                                    :key="subject.id"
-                                >
-                                    <TableCell class="font-medium">
-                                        {{ subject.subject_code }}
-                                    </TableCell>
-
-                                    <TableCell>
-                                        {{ subject.subject_name }}
-                                    </TableCell>
-
-                                    <!-- COURSE -->
-                                    <TableCell>
-                                        {{
-                                            subject.course
-                                                ? subject.course.course_code
-                                                : "No course assigned"
-                                        }}
-                                    </TableCell>
-
-                                    <!-- TEACHER -->
-                                    <TableCell>
-                                        {{
-                                            subject.teacher
-                                                ? subject.teacher.fullname
-                                                : "No teacher assigned"
-                                        }}
-                                    </TableCell>
-                                </TableRow>
-
-                                <!-- EMPTY -->
-                                <TableRow v-if="filteredSubjects.length === 0">
-                                    <TableCell
-                                        colspan="4"
-                                        class="text-center py-10"
+                                <!-- ACTIONS -->
+                                <TableCell class="flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        class="bg-yellow-500 text-white"
+                                        @click="editSubject(subject)"
                                     >
-                                        No subjects found.
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                    </div>
+                                        Edit
+                                    </Button>
+
+                                    <Button
+                                        size="sm"
+                                        class="bg-red-600 text-white"
+                                        @click="deleteSubject(subject.id)"
+                                    >
+                                        Delete
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+
+                            <TableRow v-if="filteredSubjects.length === 0">
+                                <TableCell
+                                    colspan="5"
+                                    class="text-center py-10"
+                                >
+                                    No subjects found.
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div>

@@ -86,6 +86,12 @@ const data = {
             icon: Book,
             isActive: route().current("subjects"),
         },
+        {
+            title: "Sections",
+            url: route("sections"),
+            icon: Book,
+            isActive: route().current("sections"),
+        },
     ],
     projects: [
         {

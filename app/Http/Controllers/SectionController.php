@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Section;
+use App\Models\Course;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+
 
 class SectionController extends Controller
 {
@@ -12,7 +15,10 @@ class SectionController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Sections', [
+            'sections' => Section::with('course')->latest()->get(),
+            'courses' => Course::all(),
+        ]);
     }
 
     /**
@@ -28,7 +34,14 @@ class SectionController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'course_id' => ['required', 'exists:courses,id'],
+            'section_name' => ['required', 'string', 'max:255'],
+        ]);
+
+        Section::create($validated);
+
+        return redirect()->back()->with('success', 'Section created successfully.');
     }
 
     /**

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { usePage } from "@inertiajs/vue3";
+import { usePage, Link } from "@inertiajs/vue3";
 
 import {
     BadgeCheck,
@@ -11,8 +11,6 @@ import {
     Sparkles,
     User,
 } from "lucide-vue-next";
-
-import { Link } from "@inertiajs/vue3";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/Components/ui/avatar";
 
@@ -35,18 +33,23 @@ import {
 
 /*
 |--------------------------------------------------------------------------
-| Get Logged In User From Inertia
+| SAFE INERTIA AUTH
 |--------------------------------------------------------------------------
 */
-
 const page = usePage();
+console.log("PAGE PROPS:", page.props);
 
-const user = computed(() => ({
-    name: page.props.auth.user.name,
-    email: page.props.auth.user.email,
-    role: page.props.auth.user.role,
-    avatar: "/avatars/shadcn.jpg",
-}));
+const auth = computed(() => page.props.auth as any);
+
+const user = computed(() => {
+    const u = page.props.auth?.user;
+    return {
+        name: u?.name ?? "Guest",
+        email: u?.email ?? "",
+        role: u?.role ?? "guest",
+        avatar: "/avatars/shadcn.jpg",
+    };
+});
 
 const { isMobile } = useSidebar();
 </script>
@@ -66,7 +69,7 @@ const { isMobile } = useSidebar();
                             <AvatarImage :src="user.avatar" :alt="user.name" />
 
                             <AvatarFallback class="rounded-lg">
-                                {{ user.name.charAt(0) }}
+                                {{ user.name?.charAt(0) ?? "U" }}
                             </AvatarFallback>
                         </Avatar>
 
@@ -81,7 +84,6 @@ const { isMobile } = useSidebar();
                             <span
                                 class="truncate text-xs text-muted-foreground capitalize"
                             >
-                                <!--{{ user.email }}-->
                                 {{ user.role }}
                             </span>
                         </div>
@@ -109,7 +111,7 @@ const { isMobile } = useSidebar();
                                 />
 
                                 <AvatarFallback class="rounded-lg">
-                                    {{ user.name.charAt(0) }}
+                                    {{ user.name?.charAt(0) ?? "U" }}
                                 </AvatarFallback>
                             </Avatar>
 

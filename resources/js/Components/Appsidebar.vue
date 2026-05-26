@@ -95,6 +95,12 @@ const data = {
     ],
     projects: [
         {
+            name: "Assignments",
+            url: route("assignments"),
+            icon: UserRoundCheck,
+            isActive: route().current("assignments"),
+        },
+        {
             name: "Attendance",
             url: route("attendance"),
             icon: UserRoundCheck,

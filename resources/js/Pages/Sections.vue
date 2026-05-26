@@ -38,7 +38,6 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 | Props
 |--------------------------------------------------------------------------
 */
-
 type Course = {
     id: number;
     course_name: string;
@@ -60,35 +59,33 @@ const props = defineProps<{
 | Search
 |--------------------------------------------------------------------------
 */
-
 const search = ref("");
 
 const filteredSections = computed(() => {
-    return props.sections.filter(
-        (section) =>
-            section.section_name
-                .toLowerCase()
-                .includes(search.value.toLowerCase()) ||
-            section.course.course_name
-                .toLowerCase()
-                .includes(search.value.toLowerCase()),
-    );
+    return props.sections.filter((section) => {
+        const q = search.value.toLowerCase();
+
+        return (
+            section.section_name.toLowerCase().includes(q) ||
+            section.course.course_name.toLowerCase().includes(q)
+        );
+    });
 });
 
 /*
 |--------------------------------------------------------------------------
-| Modal
+| Modal State
 |--------------------------------------------------------------------------
 */
-
 const open = ref(false);
+const editMode = ref(false);
+const selectedSectionId = ref<number | null>(null);
 
 /*
 |--------------------------------------------------------------------------
 | Form
 |--------------------------------------------------------------------------
 */
-
 const form = useForm({
     course_id: "",
     section_name: "",
@@ -96,18 +93,69 @@ const form = useForm({
 
 /*
 |--------------------------------------------------------------------------
-| Submit
+| RESET FORM
 |--------------------------------------------------------------------------
 */
+const resetForm = () => {
+    form.clearErrors();
 
+    form.course_id = "";
+    form.section_name = "";
+
+    editMode.value = false;
+    selectedSectionId.value = null;
+};
+
+/*
+|--------------------------------------------------------------------------
+| EDIT
+|--------------------------------------------------------------------------
+*/
+const editSection = (section: Section) => {
+    editMode.value = true;
+    selectedSectionId.value = section.id;
+    open.value = true;
+
+    form.course_id = String(section.course.id);
+    form.section_name = section.section_name;
+};
+
+/*
+|--------------------------------------------------------------------------
+| DELETE
+|--------------------------------------------------------------------------
+*/
+const deleteSection = (id: number) => {
+    if (confirm("Are you sure you want to delete this section?")) {
+        form.delete(route("sections.destroy", id), {
+            preserveScroll: true,
+        });
+    }
+};
+
+/*
+|--------------------------------------------------------------------------
+| SUBMIT (CREATE / UPDATE)
+|--------------------------------------------------------------------------
+*/
 const submit = () => {
-    form.post(route("sections.store"), {
-        preserveScroll: true,
-        onSuccess: () => {
-            form.reset();
-            open.value = false;
-        },
-    });
+    if (editMode.value && selectedSectionId.value) {
+        form.put(route("sections.update", selectedSectionId.value), {
+            preserveScroll: true,
+            onSuccess: () => {
+                resetForm();
+                open.value = false;
+            },
+        });
+    } else {
+        form.post(route("sections.store"), {
+            preserveScroll: true,
+            onSuccess: () => {
+                resetForm();
+                open.value = false;
+            },
+        });
+    }
 };
 </script>
 
@@ -136,8 +184,9 @@ const submit = () => {
                 </CardHeader>
 
                 <CardContent class="space-y-4">
-                    <!-- Search + Add -->
+                    <!-- SEARCH + ADD -->
                     <div class="flex justify-between items-center">
+                        <!-- SEARCH -->
                         <div class="relative w-full max-w-sm">
                             <Search
                                 class="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground"
@@ -153,7 +202,7 @@ const submit = () => {
                         <!-- ADD -->
                         <Dialog v-model:open="open">
                             <DialogTrigger as-child>
-                                <Button class="gap-2">
+                                <Button @click="resetForm" class="gap-2">
                                     <Plus class="w-4 h-4" />
                                     Add Section
                                 </Button>
@@ -161,13 +210,20 @@ const submit = () => {
 
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Add Section</DialogTitle>
+                                    <DialogTitle>
+                                        {{
+                                            editMode
+                                                ? "Edit Section"
+                                                : "Add Section"
+                                        }}
+                                    </DialogTitle>
                                 </DialogHeader>
 
                                 <form
                                     @submit.prevent="submit"
                                     class="space-y-4"
                                 >
+                                    <!-- COURSE -->
                                     <select
                                         v-model="form.course_id"
                                         class="w-full border rounded-md px-3 py-2"
@@ -182,13 +238,14 @@ const submit = () => {
                                         </option>
                                     </select>
 
+                                    <!-- SECTION NAME -->
                                     <Input
                                         v-model="form.section_name"
                                         placeholder="Section Name (e.g. BSIT-1A)"
                                     />
 
                                     <Button type="submit" class="w-full">
-                                        Save Section
+                                        {{ editMode ? "Update" : "Save" }}
                                     </Button>
                                 </form>
                             </DialogContent>
@@ -202,6 +259,7 @@ const submit = () => {
                                 <TableRow>
                                     <TableHead>Course</TableHead>
                                     <TableHead>Section Name</TableHead>
+                                    <TableHead>Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
 
@@ -217,11 +275,30 @@ const submit = () => {
                                     <TableCell>
                                         {{ section.section_name }}
                                     </TableCell>
+
+                                    <!-- ACTIONS -->
+                                    <TableCell class="flex gap-2">
+                                        <Button
+                                            size="sm"
+                                            class="bg-yellow-500 text-white"
+                                            @click="editSection(section)"
+                                        >
+                                            Edit
+                                        </Button>
+
+                                        <Button
+                                            size="sm"
+                                            class="bg-red-600 text-white"
+                                            @click="deleteSection(section.id)"
+                                        >
+                                            Delete
+                                        </Button>
+                                    </TableCell>
                                 </TableRow>
 
                                 <TableRow v-if="filteredSections.length === 0">
                                     <TableCell
-                                        colspan="2"
+                                        colspan="3"
                                         class="text-center py-10"
                                     >
                                         No sections found.

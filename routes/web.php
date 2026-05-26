@@ -58,6 +58,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     ->name('sections');
     Route::post('/sections', [SectionController::class, 'store'])
     ->name('sections.store');
+    Route::put('/sections/{section}', [SectionController::class, 'update'])->name('sections.update');
+    Route::delete('/sections/{section}', [SectionController::class, 'destroy'])->name('sections.destroy');
+
 
     Route::get('/attendance', function () {
         return Inertia::render('Attendance');

@@ -65,14 +65,18 @@ class SectionController extends Controller
      */
     public function update(Request $request, Section $section)
     {
-        //
+    $section->update($request->validate([
+        'course_id' => 'required',
+        'section_name' => 'required',
+    ]));
     }
+
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Section $section)
+   public function destroy(Section $section)
     {
-        //
+    $section->delete();
     }
 }

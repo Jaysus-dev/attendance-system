@@ -18,7 +18,10 @@ return new class extends Migration
 
             
             $table->foreignId('teacher_id')->nullable()->constrained()->nullOnDelete();
-
+            $table->foreignId('course_id')
+                ->nullable()
+                ->constrained()
+                ->nullOnDelete();
             $table->timestamps();
         });
     }

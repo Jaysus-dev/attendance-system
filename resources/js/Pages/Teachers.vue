@@ -310,7 +310,9 @@ const totalTeachers = computed(() => props.teachers.length);
                                             :key="c.id"
                                             :value="c.id"
                                         >
-                                            {{ c.department_code }}
+                                            {{ c.department_code }}-{{
+                                                c.course_code
+                                            }}
                                         </option>
                                     </select>
 

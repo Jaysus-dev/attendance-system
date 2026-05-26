@@ -38,7 +38,7 @@ import {
 
 import { Users, Search, Plus } from "lucide-vue-next";
 
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 
@@ -50,12 +50,18 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 
 type Course = {
     id: number;
-    name: string;
+
+    course_code: string;
+
+    course_name: string;
 };
 
 type Section = {
     id: number;
-    name: string;
+
+    course_id: number;
+
+    section_name: string;
 };
 
 type Student = {
@@ -73,12 +79,18 @@ type Student = {
 
     course: {
         id: number;
-        name: string;
+
+        course_code: string;
+
+        course_name: string;
     };
 
     section: {
         id: number;
-        name: string;
+
+        course_id: number;
+
+        section_name: string;
     };
 };
 
@@ -90,7 +102,9 @@ type Student = {
 
 const props = defineProps<{
     students: Student[];
+
     courses: Course[];
+
     sections: Section[];
 }>();
 
@@ -113,11 +127,17 @@ const selectedSection = ref("");
 */
 
 const courses = computed(() => {
-    return [...new Set(props.students.map((student) => student.course.name))];
+    return [
+        ...new Set(props.students.map((student) => student.course.course_code)),
+    ];
 });
 
 const sections = computed(() => {
-    return [...new Set(props.students.map((student) => student.section.name))];
+    return [
+        ...new Set(
+            props.students.map((student) => student.section.section_name),
+        ),
+    ];
 });
 
 /*
@@ -139,11 +159,11 @@ const filteredStudents = computed(() => {
 
         const matchesCourse =
             !selectedCourse.value ||
-            student.course.name === selectedCourse.value;
+            student.course.course_code === selectedCourse.value;
 
         const matchesSection =
             !selectedSection.value ||
-            student.section.name === selectedSection.value;
+            student.section.section_name === selectedSection.value;
 
         return matchesSearch && matchesCourse && matchesSection;
     });
@@ -189,6 +209,37 @@ const form = useForm({
 
 /*
 |--------------------------------------------------------------------------
+| Filter Sections Based On Selected Course
+|--------------------------------------------------------------------------
+*/
+
+const filteredSections = computed(() => {
+    // No course selected
+    if (!form.course_id) {
+        return [];
+    }
+
+    return props.sections.filter((section) => {
+        return section.course_id === Number(form.course_id);
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Reset Section When Course Changes
+|--------------------------------------------------------------------------
+*/
+
+watch(
+    () => form.course_id,
+
+    () => {
+        form.section_id = "";
+    },
+);
+
+/*
+|--------------------------------------------------------------------------
 | Submit
 |--------------------------------------------------------------------------
 */
@@ -210,21 +261,22 @@ const submit = () => {
     <Head title="Students" />
 
     <AuthenticatedLayout>
-        <div class="p-6 space-y-6">
-            <!-- Records -->
+        <div class="p-4 space-y-6">
+            <!-- Main Card -->
             <Card>
+                <!-- Header -->
                 <CardHeader>
                     <div class="flex items-center justify-between">
-                        <!-- Left Side -->
+                        <!-- Left -->
                         <div>
-                            <CardTitle>Student Records</CardTitle>
+                            <CardTitle> Student Records </CardTitle>
 
                             <CardDescription>
                                 Search and filter students
                             </CardDescription>
                         </div>
 
-                        <!-- Right Side -->
+                        <!-- Right -->
                         <div class="w-[220px]">
                             <CardHeader
                                 class="flex flex-row items-center justify-between p-4 pb-0"
@@ -244,9 +296,12 @@ const submit = () => {
                         </div>
                     </div>
                 </CardHeader>
+
+                <!-- Content -->
                 <CardContent class="space-y-4">
                     <!-- Filters -->
                     <div class="flex justify-between">
+                        <!-- Left -->
                         <div class="flex gap-4 w-full">
                             <!-- Search -->
                             <div class="relative w-full max-w-sm">
@@ -261,10 +316,10 @@ const submit = () => {
                                 />
                             </div>
 
-                            <!-- Course -->
+                            <!-- Course Filter -->
                             <select
                                 v-model="selectedCourse"
-                                class="border rounded-md px-3 py-2 w-full max-w-32"
+                                class="border rounded-md px-3 py-2 w-full max-w-40"
                             >
                                 <option value="">All Courses</option>
 
@@ -277,10 +332,10 @@ const submit = () => {
                                 </option>
                             </select>
 
-                            <!-- Section -->
+                            <!-- Section Filter -->
                             <select
                                 v-model="selectedSection"
-                                class="border rounded-md px-3 py-2 w-full max-w-32"
+                                class="border rounded-md px-3 py-2 w-full max-w-40"
                             >
                                 <option value="">All Sections</option>
 
@@ -293,10 +348,11 @@ const submit = () => {
                                 </option>
                             </select>
                         </div>
+
                         <!-- Add Student -->
                         <Dialog v-model:open="open">
                             <DialogTrigger as-child>
-                                <Button variant="destructive" class="gap-2">
+                                <Button class="gap-2">
                                     <Plus class="w-4 h-4" />
 
                                     Add Student
@@ -308,6 +364,7 @@ const submit = () => {
                                     <DialogTitle> Add Student </DialogTitle>
                                 </DialogHeader>
 
+                                <!-- Form -->
                                 <form
                                     @submit.prevent="submit"
                                     class="space-y-4"
@@ -348,7 +405,7 @@ const submit = () => {
                                             :key="course.id"
                                             :value="course.id"
                                         >
-                                            {{ course.name }}
+                                            {{ course.course_name }}
                                         </option>
                                     </select>
 
@@ -360,11 +417,11 @@ const submit = () => {
                                         <option value="">Select Section</option>
 
                                         <option
-                                            v-for="section in props.sections"
+                                            v-for="section in filteredSections"
                                             :key="section.id"
                                             :value="section.id"
                                         >
-                                            {{ section.name }}
+                                            {{ section.section_name }}
                                         </option>
                                     </select>
 
@@ -438,11 +495,11 @@ const submit = () => {
                                     </TableCell>
 
                                     <TableCell>
-                                        {{ student.course.name }}
+                                        {{ student.course.course_code }}
                                     </TableCell>
 
                                     <TableCell>
-                                        {{ student.section.name }}
+                                        {{ student.section.section_name }}
                                     </TableCell>
 
                                     <TableCell>
@@ -458,6 +515,7 @@ const submit = () => {
                                     </TableCell>
                                 </TableRow>
 
+                                <!-- Empty -->
                                 <TableRow v-if="filteredStudents.length === 0">
                                     <TableCell
                                         colspan="7"

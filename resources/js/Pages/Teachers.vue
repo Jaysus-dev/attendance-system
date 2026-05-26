@@ -207,23 +207,13 @@ const submit = () => {
                                 Search and manage teachers
                             </CardDescription>
                         </div>
-
-                        <div class="w-[220px]">
-                            <CardHeader
-                                class="flex flex-row items-center justify-between p-4 pb-0"
-                            >
-                                <CardTitle class="text-sm font-medium">
-                                    Total Teachers
-                                </CardTitle>
-
-                                <Users class="w-4 h-4 text-muted-foreground" />
-                            </CardHeader>
-
-                            <CardContent class="p-4 pt-0">
-                                <div class="text-2xl font-bold">
-                                    {{ totalTeachers }}
-                                </div>
-                            </CardContent>
+                        <div
+                            class="flex items-center gap-2 text-muted-foreground"
+                        >
+                            <Users class="w-4 h-4 text-muted-foreground" />
+                            <span class="text-sm">
+                                Total: {{ totalTeachers }}
+                            </span>
                         </div>
                     </div>
                 </CardHeader>

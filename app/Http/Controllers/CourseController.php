@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class CourseController extends Controller
 {
@@ -12,7 +13,9 @@ class CourseController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Courses', [
+            'courses' => Course::latest()->get(),
+        ]);
     }
 
     /**
@@ -28,7 +31,14 @@ class CourseController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'course_code' => 'required|string|max:20|unique:courses,course_code',
+            'course_name' => 'required|string|max:255',
+        ]);
+
+        Course::create($validated);
+
+        return redirect()->back()->with('success', 'Course created successfully.');
     }
 
     /**

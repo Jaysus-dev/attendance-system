@@ -75,10 +75,10 @@ const data = {
             isActive: route().current("teachers"),
         },
         {
-            title: "Classes",
-            url: route("classes"),
+            title: "Courses",
+            url: route("courses"),
             icon: BookSearch,
-            isActive: route().current("classes"),
+            isActive: route().current("courses"),
         },
         {
             title: "Subjects",

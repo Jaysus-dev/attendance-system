@@ -35,8 +35,7 @@ import {
 } from "@/Components/ui/table";
 
 import { Users, Search, Plus } from "lucide-vue-next";
-
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, nextTick } from "vue";
 
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 
@@ -65,16 +64,8 @@ type Student = {
     parent_email: string;
     year_level: string;
 
-    course: {
-        id: number;
-        course_code: string;
-        course_name: string;
-    };
-
-    section: {
-        id: number;
-        section_name: string;
-    };
+    course: Course;
+    section: Section;
 };
 
 /*
@@ -90,7 +81,7 @@ const props = defineProps<{
 
 /*
 |--------------------------------------------------------------------------
-| Search & Filters
+| Filters (table)
 |--------------------------------------------------------------------------
 */
 const search = ref("");
@@ -98,38 +89,31 @@ const selectedCourse = ref("");
 const selectedSection = ref("");
 const selectedYear = ref("");
 
-/*
-|--------------------------------------------------------------------------
-| Dynamic filter options (from students)
-|--------------------------------------------------------------------------
-*/
-const courses = computed(() => {
-    return [...new Set(props.students.map((s) => s.course.course_code))];
-});
+const courses = computed(() => [
+    ...new Set(props.students.map((s) => s.course.course_code)),
+]);
 
-const sections = computed(() => {
-    return [...new Set(props.students.map((s) => s.section.section_name))];
-});
+const sections = computed(() => [
+    ...new Set(props.students.map((s) => s.section.section_name)),
+]);
 
-const years = computed(() => {
-    return [...new Set(props.students.map((s) => s.year_level))]; // ✅ NEW
-});
+const years = computed(() => [
+    ...new Set(props.students.map((s) => s.year_level)),
+]);
 
 /*
 |--------------------------------------------------------------------------
-| FILTERED STUDENTS (UPDATED)
+| Filtered students
 |--------------------------------------------------------------------------
 */
 const filteredStudents = computed(() => {
     return props.students.filter((student) => {
+        const q = search.value.toLowerCase();
+
         const matchesSearch =
-            student.fullname
-                .toLowerCase()
-                .includes(search.value.toLowerCase()) ||
-            student.student_number
-                .toLowerCase()
-                .includes(search.value.toLowerCase()) ||
-            student.email.toLowerCase().includes(search.value.toLowerCase());
+            student.fullname.toLowerCase().includes(q) ||
+            student.student_number.toLowerCase().includes(q) ||
+            student.email.toLowerCase().includes(q);
 
         const matchesCourse =
             !selectedCourse.value ||
@@ -148,14 +132,7 @@ const filteredStudents = computed(() => {
 
 /*
 |--------------------------------------------------------------------------
-| Stats
-|--------------------------------------------------------------------------
-*/
-const totalStudents = computed(() => props.students.length);
-
-/*
-|--------------------------------------------------------------------------
-| Dialog State
+| Dialog state
 |--------------------------------------------------------------------------
 */
 const open = ref(false);
@@ -179,31 +156,40 @@ const form = useForm({
 
 /*
 |--------------------------------------------------------------------------
-| Reset Form
-|--------------------------------------------------------------------------
-*/
-const resetForm = () => {
-    form.reset();
-    editMode.value = false;
-    selectedStudentId.value = null;
-};
-
-/*
-|--------------------------------------------------------------------------
-| Filter Sections based on Course
+| FIX: Sections depend on course
 |--------------------------------------------------------------------------
 */
 const filteredSections = computed(() => {
     if (!form.course_id) return [];
 
     return props.sections.filter(
-        (section) => section.course_id === Number(form.course_id),
+        (s) => String(s.course_id) === String(form.course_id),
     );
 });
 
 /*
 |--------------------------------------------------------------------------
-| Watch Course Change
+| Reset form
+|--------------------------------------------------------------------------
+*/
+const resetForm = () => {
+    form.clearErrors();
+
+    form.student_number = "";
+    form.fullname = "";
+    form.email = "";
+    form.parent_email = "";
+    form.course_id = "";
+    form.section_id = "";
+    form.year_level = "";
+
+    editMode.value = false;
+    selectedStudentId.value = null;
+};
+
+/*
+|--------------------------------------------------------------------------
+| Watch course change → reset section
 |--------------------------------------------------------------------------
 */
 watch(
@@ -215,40 +201,36 @@ watch(
 
 /*
 |--------------------------------------------------------------------------
-| EDIT STUDENT
+| FIXED EDIT FUNCTION (IMPORTANT)
 |--------------------------------------------------------------------------
 */
-const editStudent = (student: Student) => {
+const editStudent = async (student: Student) => {
     editMode.value = true;
+    selectedStudentId.value = student.id;
     open.value = true;
 
-    selectedStudentId.value = student.id;
+    form.clearErrors();
 
+    // STEP 1: set course first (triggers section filter)
+    form.course_id = String(student.course.id);
+
+    // STEP 2: wait for filteredSections to update
+    await nextTick();
+
+    // STEP 3: set other fields
     form.student_number = student.student_number;
     form.fullname = student.fullname;
     form.email = student.email;
     form.parent_email = student.parent_email;
-    form.course_id = String(student.course.id);
-    form.section_id = String(student.section.id);
     form.year_level = student.year_level;
+
+    // STEP 4: set section LAST (important)
+    form.section_id = String(student.section.id);
 };
 
 /*
 |--------------------------------------------------------------------------
-| DELETE STUDENT
-|--------------------------------------------------------------------------
-*/
-const deleteStudent = (id: number) => {
-    if (confirm("Are you sure you want to delete this student?")) {
-        form.delete(route("students.destroy", id), {
-            preserveScroll: true,
-        });
-    }
-};
-
-/*
-|--------------------------------------------------------------------------
-| SUBMIT (ADD / UPDATE)
+| Submit
 |--------------------------------------------------------------------------
 */
 const submit = () => {
@@ -270,8 +252,27 @@ const submit = () => {
         });
     }
 };
-</script>
 
+/*
+|--------------------------------------------------------------------------
+| Delete
+|--------------------------------------------------------------------------
+*/
+const deleteStudent = (id: number) => {
+    if (confirm("Are you sure you want to delete this student?")) {
+        form.delete(route("students.destroy", id), {
+            preserveScroll: true,
+        });
+    }
+};
+
+/*
+|--------------------------------------------------------------------------
+| Stats
+|--------------------------------------------------------------------------
+*/
+const totalStudents = computed(() => props.students.length);
+</script>
 <template>
     <Head title="Students" />
 

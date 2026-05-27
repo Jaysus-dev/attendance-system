@@ -71,8 +71,7 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        Auth::login($user);
-
-        return redirect(route('dashboard', absolute: false));
+   Auth::logout();
+    return redirect('/login')->with('message', 'Waiting for admin approval');
     }
 }

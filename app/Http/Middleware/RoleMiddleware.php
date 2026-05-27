@@ -8,24 +8,24 @@ use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
+{public function handle(Request $request, Closure $next, ...$roles): Response
 {
-    public function handle($request, Closure $next, ...$roles)
-    {
-        $user = Auth::user();
+    $user = Auth::user();
 
-        if (!$user) {
-            return redirect('/login');
-        }
-
-        if ($user->status !== 'approved') {
-            Auth::logout();
-            abort(403, 'Account not approved yet');
-        }
-
-        if (!in_array($user->role, $roles)) {
-            abort(403, 'Unauthorized role');
-        }
-
-        return $next($request);
+    if (!$user) {
+        return redirect('/login');
     }
+
+    // ❗ status check FIRST (except admin)
+    if ($user->role !== 'admin' && $user->status !== 'approved') {
+        return redirect('/pending-approval');
+    }
+
+    // ❗ role check
+    if (!in_array($user->role, $roles)) {
+        abort(403, 'Unauthorized role');
+    }
+
+    return $next($request);
+}
 }

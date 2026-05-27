@@ -96,4 +96,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::get('/pending-approval', function () {
+    return Inertia::render('Auth/PendingApproval');
+})->name('pending.approval');
+
 require __DIR__.'/auth.php';

@@ -13,7 +13,7 @@ class AttendanceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+ public function index()
 {
     $user = Auth::user();
 
@@ -21,15 +21,30 @@ class AttendanceController extends Controller
         abort(403);
     }
 
-    if ($user->role === 'teacher' && $user->status !== 'approved') {
-        abort(403, 'Not approved yet');
+    // ADMIN: see everything
+    if ($user->role === 'admin') {
+        $assignments = ClassAssignment::with(['course','section','subject'])->get();
     }
 
-    $assignments = ClassAssignment::with(['course','section','subject'])
-        ->when($user->role === 'teacher', function ($query) use ($user) {
-            $query->where('teacher_id', $user->teacher->id);
-        })
-        ->get();
+    // TEACHER: only own
+    elseif ($user->role === 'teacher') {
+
+        if ($user->status !== 'approved') {
+            abort(403);
+        }
+
+        if (!$user->teacher) {
+            abort(403, 'Teacher profile not found');
+        }
+
+        $assignments = ClassAssignment::with(['course','section','subject'])
+            ->where('teacher_id', $user->teacher->id)
+            ->get();
+    }
+
+    else {
+        abort(403);
+    }
 
     return Inertia::render('Attendance', [
         'assignments' => $assignments,

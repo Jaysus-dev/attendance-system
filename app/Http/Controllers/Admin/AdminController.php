@@ -8,7 +8,6 @@ use Inertia\Inertia;
 
 class AdminController extends Controller
 {
-    // LIST USERS
     public function users()
     {
         return Inertia::render('Admin/Users', [
@@ -16,7 +15,6 @@ class AdminController extends Controller
         ]);
     }
 
-    // APPROVE USER
     public function approve(User $user)
     {
         $user->update([
@@ -26,7 +24,6 @@ class AdminController extends Controller
         return back()->with('success', 'User approved successfully.');
     }
 
-    // REJECT USER
     public function reject(User $user)
     {
         $user->delete();

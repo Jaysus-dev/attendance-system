@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ClassAssignment;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
 
@@ -11,9 +14,25 @@ class AttendanceController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
-        //
+   {
+    $teacher = Auth::user()->teacher;
+
+    if (!$teacher) {
+        abort(403, 'Not a teacher account');
     }
+
+    $assignments = ClassAssignment::with([
+        'course',
+        'section',
+        'subject'
+    ])
+    ->where('teacher_id', $teacher->id)
+    ->get();
+
+    return Inertia::render('Attendance', [
+        'assignments' => $assignments
+    ]);
+}
 
     /**
      * Show the form for creating a new resource.

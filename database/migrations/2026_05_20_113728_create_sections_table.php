@@ -17,6 +17,7 @@ return new class extends Migration
                 ->constrained()
                 ->onDelete('cascade');
             $table->string('section_name');
+            $table->string('year_level')->nullable();
             $table->timestamps();
         });
     }

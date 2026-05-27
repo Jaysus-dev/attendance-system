@@ -22,4 +22,8 @@ class Section extends Model
     {
         return $this->hasMany(Student::class);
     }
+    public function getYearLevelAttribute()
+{
+    return $this->year_level;
+}
 }

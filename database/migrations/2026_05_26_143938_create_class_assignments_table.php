@@ -12,13 +12,28 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('class_assignments', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('teacher_id')->constrained()->onDelete('cascade');
-        $table->foreignId('course_id')->constrained()->onDelete('cascade');
-        $table->foreignId('section_id')->constrained()->onDelete('cascade');
-        $table->foreignId('subject_id')->constrained()->onDelete('cascade');
-        $table->timestamps();
-        });
+    $table->id();
+
+    $table->foreignId('teacher_id')
+        ->constrained()
+        ->onDelete('cascade');
+
+    $table->foreignId('course_id')
+        ->constrained()
+        ->onDelete('cascade');
+
+    $table->foreignId('section_id')
+        ->constrained()
+        ->onDelete('cascade');
+
+    $table->foreignId('subject_id')
+        ->constrained()
+        ->onDelete('cascade');
+
+    $table->string('year_level'); 
+
+    $table->timestamps();
+});
     }
 
     /**

@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'role',
         'password',
+        'status',
     ];
 
     /**
@@ -48,7 +49,7 @@ class User extends Authenticatable
         ];
     }
     public function teacher()
-{
+    {
     return $this->hasOne(Teacher::class);
-}
+    }
 }

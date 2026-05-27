@@ -108,9 +108,9 @@ const data = {
         },
         {
             name: "Users",
-            url: route("users"),
+            url: route("admin.users"),
             icon: Users,
-            isActive: route().current("users"),
+            isActive: route().current("admin.users"),
         },
         {
             name: "Reports",

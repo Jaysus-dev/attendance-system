@@ -1,6 +1,7 @@
 <?php
 
-
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
@@ -22,7 +23,7 @@ Route::get('/', function () {
     ]);
 });
 
-Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
 
@@ -63,24 +64,32 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     // REPORTS
     Route::get('/reports', function () { return Inertia::render('Reports'); })->name('reports');
-    // USERS
-    Route::get('/users', function () { return Inertia::render('Users'); })->name('users');
+  
     // SETTINGS
     Route::get('/settings', function () { return Inertia::render('Settings'); })->name('settings');
 
+    // USERS (ADMIN ONLY)
+    Route::get('/users', [AdminController::class, 'users'])
+    ->name('admin.users');
+
+    Route::put('/users/{user}/approve', [AdminController::class, 'approve'])
+    ->name('admin.users.approve');
+
+    Route::delete('/users/{user}/reject', [AdminController::class, 'reject'])
+    ->name('admin.users.reject');
+
 });
 
-    Route::middleware(['auth', 'verified', 'role:teacher,admin'])->group(function () {
+    Route::middleware(['auth', 'role:teacher,admin'])->group(function () {
 
-    Route::get('/attendance', function () {
-        return Inertia::render('Attendance');
-    })->name('attendance');
+    Route::get('/attendance', [AttendanceController::class, 'index'])
+        ->name('attendance');
 
     // FUTURE:
     // Route::get('/my-classes')
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

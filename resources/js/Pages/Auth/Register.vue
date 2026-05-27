@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from "@inertiajs/vue3";
 
-import { Button } from "@/Components/ui/button";
 import {
     Card,
     CardContent,
@@ -10,12 +9,7 @@ import {
     CardTitle,
 } from "@/Components/ui/card";
 
-import {
-    Field,
-    FieldDescription,
-    FieldGroup,
-    FieldLabel,
-} from "@/Components/ui/field";
+import { Field, FieldDescription, FieldLabel } from "@/Components/ui/field";
 
 import { Input } from "@/Components/ui/input";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
@@ -25,6 +19,7 @@ const form = useForm({
     email: "",
     password: "",
     password_confirmation: "",
+    role: "student",
 });
 
 const submit = () => {
@@ -43,6 +38,7 @@ const submit = () => {
         <Card class="w-full max-w-md">
             <CardHeader>
                 <CardTitle>Create an account</CardTitle>
+
                 <CardDescription>
                     Enter your information below to create your account
                 </CardDescription>
@@ -52,7 +48,7 @@ const submit = () => {
                 <form @submit.prevent="submit" class="space-y-4">
                     <!-- NAME -->
                     <Field>
-                        <FieldLabel for="name">Full Name</FieldLabel>
+                        <FieldLabel for="name"> Full Name </FieldLabel>
 
                         <Input
                             id="name"
@@ -72,7 +68,7 @@ const submit = () => {
 
                     <!-- EMAIL -->
                     <Field>
-                        <FieldLabel for="email">Email</FieldLabel>
+                        <FieldLabel for="email"> Email </FieldLabel>
 
                         <Input
                             id="email"
@@ -94,9 +90,31 @@ const submit = () => {
                         </p>
                     </Field>
 
+                    <!-- ROLE -->
+                    <Field>
+                        <FieldLabel for="role"> Register As </FieldLabel>
+
+                        <select
+                            id="role"
+                            v-model="form.role"
+                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                            <option value="student">Student</option>
+
+                            <option value="teacher">Teacher</option>
+                        </select>
+
+                        <p
+                            v-if="form.errors.role"
+                            class="text-sm text-red-500 mt-1"
+                        >
+                            {{ form.errors.role }}
+                        </p>
+                    </Field>
+
                     <!-- PASSWORD -->
                     <Field>
-                        <FieldLabel for="password">Password</FieldLabel>
+                        <FieldLabel for="password"> Password </FieldLabel>
 
                         <Input
                             id="password"
@@ -138,7 +156,7 @@ const submit = () => {
                         </p>
                     </Field>
 
-                    <!-- BUTTONS -->
+                    <!-- BUTTON -->
                     <div class="space-y-2 pt-2">
                         <PrimaryButton
                             type="submit"
@@ -149,9 +167,10 @@ const submit = () => {
                         </PrimaryButton>
                     </div>
 
-                    <!-- LOGIN LINK -->
+                    <!-- LOGIN -->
                     <p class="text-center text-sm mt-4">
                         Already have an account?
+
                         <Link
                             :href="route('login')"
                             class="text-primary underline ml-1"

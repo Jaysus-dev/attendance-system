@@ -12,6 +12,7 @@ class ClassAssignment extends Model
         'course_id',
         'section_id',
         'subject_id',
+        'year_level',
     ];
     
     public function teacher()

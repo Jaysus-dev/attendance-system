@@ -14,23 +14,25 @@ class AttendanceController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-   {
-    $teacher = Auth::user()->teacher;
+{
+    $user = Auth::user();
 
-    if (!$teacher) {
-        abort(403, 'Not a teacher account');
+    if (!$user) {
+        abort(403);
     }
 
-    $assignments = ClassAssignment::with([
-        'course',
-        'section',
-        'subject'
-    ])
-    ->where('teacher_id', $teacher->id)
-    ->get();
+    if ($user->role === 'teacher' && $user->status !== 'approved') {
+        abort(403, 'Not approved yet');
+    }
+
+    $assignments = ClassAssignment::with(['course','section','subject'])
+        ->when($user->role === 'teacher', function ($query) use ($user) {
+            $query->where('teacher_id', $user->teacher->id);
+        })
+        ->get();
 
     return Inertia::render('Attendance', [
-        'assignments' => $assignments
+        'assignments' => $assignments,
     ]);
 }
 

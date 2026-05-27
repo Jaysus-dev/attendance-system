@@ -80,7 +80,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
 });
 
-    Route::middleware(['auth', 'role:teacher,admin'])->group(function () {
+    Route::middleware(['auth', 'role:teacher'])->group(function () {
 
     Route::get('/attendance', [AttendanceController::class, 'index'])
         ->name('attendance');

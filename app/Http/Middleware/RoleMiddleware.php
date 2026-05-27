@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
-{public function handle(Request $request, Closure $next, ...$roles): Response
+{
+    public function handle(Request $request, Closure $next, ...$roles): Response
 {
     $user = Auth::user();
 
@@ -16,15 +17,27 @@ class RoleMiddleware
         return redirect('/login');
     }
 
-    // ❗ status check FIRST (except admin)
-    if ($user->role !== 'admin' && $user->status !== 'approved') {
-        return redirect('/pending-approval');
+    // ✅ ADMIN ALWAYS ALLOWED
+    if ($user->role === 'admin') {
+        return $next($request);
     }
 
-    // ❗ role check
+    // ❗ ROLE CHECK FIRST (for non-admin)
     if (!in_array($user->role, $roles)) {
         abort(403, 'Unauthorized role');
     }
+
+     // ❗ ONLY CHECK STATUS FOR PROTECTED APP ROUTES
+    if ($user->status !== 'approved') {
+
+        // 🚨 IMPORTANT: prevent loop
+        if ($request->routeIs('pending.approval')) {
+            return $next($request);
+        }
+
+        return redirect('/pending-approval');
+    }
+
 
     return $next($request);
 }

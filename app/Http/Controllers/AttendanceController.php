@@ -110,6 +110,16 @@ public function markAttendance(Request $request)
             'date' => now(),
             'marked_at' => now(),
         ]);
+
+         // ✅ EMAIL SEND HERE (IMPORTANT)
+        try {
+            if ($student->parent_email) {
+                Mail::to($student->parent_email)
+                    ->send(new AttendanceMail($student, $request->status));
+            }
+        } catch (\Exception $e) {
+            \Log::error('Attendance email failed: ' . $e->getMessage());
+        }
     }
 
     return back();

@@ -113,6 +113,6 @@ class AttendanceReportController extends Controller
         'subjectId' => $subjectId,
     ])
     ->setPaper('a4', 'portrait')
-    ->download('attendance-report.pdf');
+    ->stream('attendance-report.pdf');
 }
 }

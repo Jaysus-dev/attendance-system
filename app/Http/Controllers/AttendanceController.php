@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
 use App\Models\Student;
 use App\Models\Attendance;
-use App\Mail\AttendanceMail;
 use App\Models\ClassAssignment;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Mail\AttendanceMail;
 
 class AttendanceController extends Controller
 {
@@ -22,13 +21,9 @@ class AttendanceController extends Controller
             abort(403);
         }
 
-        $assignments = ClassAssignment::with([
-            'course',
-            'section',
-            'subject'
-        ])
-        ->where('teacher_id', $user->teacher->id)
-        ->get();
+        $assignments = ClassAssignment::with(['course', 'section', 'subject'])
+            ->where('teacher_id', $user->teacher->id)
+            ->get();
 
         return Inertia::render('Attendance', [
             'assignments' => $assignments,
@@ -39,15 +34,10 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
 
-        $assignment = ClassAssignment::with([
-            'teacher',
-            'course',
-            'section',
-            'subject'
-        ])->findOrFail($id);
+        $assignment = ClassAssignment::with(['teacher', 'course', 'section', 'subject'])
+            ->findOrFail($id);
 
         if ($user->role === 'teacher') {
-
             if (!$user->teacher || $assignment->teacher_id !== $user->teacher->id) {
                 abort(403);
             }
@@ -57,73 +47,74 @@ class AttendanceController extends Controller
             ->where('course_id', $assignment->course_id)
             ->get();
 
-        // 🔥 GET TODAY'S ATTENDANCE
-     $attendance = Attendance::whereIn('student_id', $students->pluck('id'))
-    ->where('class_assignment_id', $assignment->id)
-    ->whereDate('date', now())
-    ->get()
-    ->keyBy(function ($item) {
-    return $item->student_id . '-' . $item->class_assignment_id;
+        // ✅ FIXED ATTENDANCE MAPPING
+        $attendance = Attendance::where('class_assignment_id', $assignment->id)
+            ->whereIn('student_id', $students->pluck('id'))
+            ->whereDate('date', now())
+            ->get()
+            ->keyBy(function ($item) {
+                return $item->student_id . '-' . $item->class_assignment_id;
+            });
 
-    });
         return Inertia::render('Attendance/Take', [
             'assignment' => $assignment,
             'students' => $students,
             'attendance' => $attendance,
         ]);
     }
-public function markAttendance(Request $request)
-{
-    $request->validate([
-        'student_id' => 'required|exists:students,id',
-        'status' => 'required|string',
-        'class_assignment_id' => 'required|exists:class_assignments,id',
-    ]);
 
-    $student = Student::findOrFail($request->student_id);
-    $today = now()->toDateString();
-
-    $existing = Attendance::where('student_id', $student->id)
-        ->where('class_assignment_id', $request->class_assignment_id)
-        ->whereDate('date', $today)
-        ->first();
-
-    if ($existing) {
-
-        $minutes = $existing->created_at->diffInMinutes(now());
-
-        // 🔒 5-minute lock
-        if ($minutes >= 5) {
-            return back()->with('error', 'Attendance is locked after 5 minutes');
-        }
-
-        $existing->update([
-            'status' => $request->status,
+    public function markAttendance(Request $request)
+    {
+        $request->validate([
+            'student_id' => 'required|exists:students,id',
+            'status' => 'required|string',
+            'class_assignment_id' => 'required|exists:class_assignments,id',
         ]);
 
-    } else {
+        $student = Student::findOrFail($request->student_id);
+        $today = now()->toDateString();
 
-        Attendance::create([
-            'student_id' => $student->id,
-            'teacher_id' => auth()->id(),
-            'class_assignment_id' => $request->class_assignment_id,
-            'course_id' => $student->course_id,
-            'section_id' => $student->section_id,
-            'status' => $request->status,
-            'date' => now(),
-            'marked_at' => now(),
-        ]);
+        $existing = Attendance::where('student_id', $student->id)
+            ->where('class_assignment_id', $request->class_assignment_id)
+            ->whereDate('date', $today)
+            ->first();
 
-         // ✅ EMAIL SEND HERE (IMPORTANT)
-        try {
-            if ($student->parent_email) {
-                Mail::to($student->parent_email)
-                    ->send(new AttendanceMail($student, $request->status));
+        if ($existing) {
+
+            $minutes = $existing->created_at->diffInMinutes(now());
+
+            if ($minutes >= 5) {
+                return back()->with('error', 'Attendance is locked after 5 minutes');
             }
-        } catch (\Exception $e) {
-            \Log::error('Attendance email failed: ' . $e->getMessage());
-        }
-    }
 
-    return back();
-}}
+            $existing->update([
+                'status' => $request->status,
+            ]);
+
+        } else {
+
+            Attendance::create([
+                'student_id' => $student->id,
+                'teacher_id' => auth()->id(),
+                'class_assignment_id' => $request->class_assignment_id,
+                'course_id' => $student->course_id,
+                'section_id' => $student->section_id,
+                'status' => $request->status,
+                'date' => now(),
+                'marked_at' => now(),
+            ]);
+
+            // EMAIL
+            try {
+                if ($student->parent_email) {
+                    Mail::to($student->parent_email)
+                        ->send(new AttendanceMail($student, $request->status));
+                }
+            } catch (\Exception $e) {
+                \Log::error($e->getMessage());
+            }
+        }
+
+        return back();
+    }
+}

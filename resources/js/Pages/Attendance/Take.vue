@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, router } from "@inertiajs/vue3";
-import { computed, ref } from "vue";
+import { computed, ref, reactive } from "vue";
 
 import {
     Card,
@@ -20,26 +20,34 @@ import {
     TableRow,
 } from "@/Components/ui/table";
 
-import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
-import { Search, Users } from "lucide-vue-next";
+import { Users } from "lucide-vue-next";
 
+/* --------------------------
+   PROPS
+--------------------------- */
 const props = defineProps<{
     assignment: any;
     students: any[];
     attendance: Record<string, any>;
 }>();
 
-const search = ref("");
-const selectedYear = ref("");
+/* --------------------------
+   LOCAL STATE (IMPORTANT FIX)
+--------------------------- */
+const localAttendance = reactive<Record<string, any>>({
+    ...props.attendance,
+});
 
 /* --------------------------
-   FILTERED STUDENTS
+   SEARCH
 --------------------------- */
-const filteredStudents = computed(() => {
-    return props.students.filter((s) => {
-        const q = search.value.toLowerCase();
+const search = ref("");
 
+const filteredStudents = computed(() => {
+    const q = search.value.toLowerCase();
+
+    return props.students.filter((s) => {
         return (
             s.fullname.toLowerCase().includes(q) ||
             s.student_number.toLowerCase().includes(q) ||
@@ -49,18 +57,24 @@ const filteredStudents = computed(() => {
 });
 
 /* --------------------------
-   ATTENDANCE MAP
+   KEY
 --------------------------- */
-const statusMap = computed(() => props.attendance || {});
+const getKey = (studentId: number) => `${studentId}-${props.assignment.id}`;
 
 /* --------------------------
-   LOCK AFTER 5 MINUTES
+   GET STATUS
+--------------------------- */
+const getStatus = (studentId: number) => {
+    return localAttendance[getKey(studentId)]?.status;
+};
+
+/* --------------------------
+   LOCK (5 MINUTES FIX)
 --------------------------- */
 const isLocked = (studentId: number) => {
-    const key = studentId + "-" + props.assignment.id;
-    const record = props.attendance?.[key];
+    const record = localAttendance[getKey(studentId)];
 
-    if (!record) return false;
+    if (!record?.created_at) return false;
 
     const minutes =
         (Date.now() - new Date(record.created_at).getTime()) / 60000;
@@ -72,11 +86,29 @@ const isLocked = (studentId: number) => {
    MARK ATTENDANCE
 --------------------------- */
 const mark = (status: string, studentId: number) => {
-    router.post(route("attendance.mark"), {
+    const key = getKey(studentId);
+
+    // update UI instantly
+    localAttendance[key] = {
         student_id: studentId,
         class_assignment_id: props.assignment.id,
         status,
-    });
+        created_at:
+            localAttendance[key]?.created_at ?? new Date().toISOString(),
+    };
+
+    router.post(
+        route("attendance.mark"),
+        {
+            student_id: studentId,
+            class_assignment_id: props.assignment.id,
+            status,
+        },
+        {
+            preserveScroll: true,
+            preserveState: true,
+        },
+    );
 };
 </script>
 
@@ -104,6 +136,7 @@ const mark = (status: string, studentId: number) => {
                 <CardHeader>
                     <div class="flex justify-between">
                         <CardTitle>Students</CardTitle>
+
                         <div
                             class="flex items-center gap-2 text-muted-foreground"
                         >
@@ -112,7 +145,6 @@ const mark = (status: string, studentId: number) => {
                         </div>
                     </div>
 
-                    <!-- SEARCH -->
                     <div class="mt-4">
                         <Input
                             v-model="search"
@@ -144,37 +176,53 @@ const mark = (status: string, studentId: number) => {
                                 <TableCell>{{ student.email }}</TableCell>
 
                                 <TableCell>
-                                    <!-- NOT LOCKED -->
+                                    <!-- LOCKED -->
                                     <div
-                                        v-if="!isLocked(student.id)"
-                                        class="flex gap-2"
+                                        v-if="isLocked(student.id)"
+                                        class="font-bold"
                                     >
-                                        <Button
+                                        {{ getStatus(student.id) }}
+                                    </div>
+
+                                    <!-- ACTIVE -->
+                                    <div v-else class="flex gap-2">
+                                        <button
+                                            :class="[
+                                                'px-3 py-1 rounded-md border',
+                                                getStatus(student.id) === 'late'
+                                                    ? 'bg-yellow-500 text-white'
+                                                    : 'bg-yellow-100 text-yellow-700',
+                                            ]"
                                             @click="mark('late', student.id)"
                                         >
                                             Late
-                                        </Button>
+                                        </button>
 
-                                        <Button
+                                        <button
+                                            :class="[
+                                                'px-3 py-1 rounded-md border',
+                                                getStatus(student.id) ===
+                                                'present'
+                                                    ? 'bg-green-600 text-white'
+                                                    : 'bg-green-100 text-green-700',
+                                            ]"
                                             @click="mark('present', student.id)"
                                         >
                                             Present
-                                        </Button>
+                                        </button>
 
-                                        <Button
+                                        <button
+                                            :class="[
+                                                'px-3 py-1 rounded-md border',
+                                                getStatus(student.id) ===
+                                                'absent'
+                                                    ? 'bg-red-600 text-white'
+                                                    : 'bg-red-100 text-red-700',
+                                            ]"
                                             @click="mark('absent', student.id)"
                                         >
                                             Absent
-                                        </Button>
-                                    </div>
-
-                                    <!-- LOCKED -->
-                                    <div v-else class="font-bold">
-                                        {{
-                                            statusMap[
-                                                student.id + "-" + assignment.id
-                                            ]?.status
-                                        }}
+                                        </button>
                                     </div>
                                 </TableCell>
                             </TableRow>

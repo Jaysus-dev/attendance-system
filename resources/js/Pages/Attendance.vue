@@ -66,7 +66,6 @@ const props = defineProps({
                                 <TableHead>Section</TableHead>
                                 <TableHead>Subject</TableHead>
                                 <TableHead>Year Level</TableHead>
-                                <TableHead>Action</TableHead>
                             </TableRow>
                         </TableHeader>
 
@@ -74,6 +73,13 @@ const props = defineProps({
                             <TableRow
                                 v-for="a in props.assignments"
                                 :key="a.id"
+                                class="cursor-pointer"
+                                size="sm"
+                                @click="
+                                    $inertia.visit(
+                                        route('attendance.take', a.id),
+                                    )
+                                "
                             >
                                 <TableCell>
                                     {{ a.course.course_name }}
@@ -90,16 +96,7 @@ const props = defineProps({
                                     {{ a.section?.year_level || "Not Set" }}
                                 </TableCell>
                                 <TableCell>
-                                    <Button
-                                        size="sm"
-                                        @click="
-                                            $inertia.visit(
-                                                route('attendance.take', a.id),
-                                            )
-                                        "
-                                    >
-                                        Take Attendance
-                                    </Button>
+                                    <Button> Take Attendance </Button>
                                 </TableCell>
                             </TableRow>
 

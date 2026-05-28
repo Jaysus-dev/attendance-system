@@ -117,6 +117,8 @@ class AdminDashboardController extends Controller
 
             'weeklyAttendance' => $weekly,
             'recent' => $recent,
+
+             'dashboardStyle' => auth()->user()->dashboard_style ?? 1,
         ]);
     }
 }

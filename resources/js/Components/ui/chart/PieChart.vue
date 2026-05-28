@@ -30,7 +30,7 @@ const options = {
 </script>
 
 <template>
-    <div class="h-[320px] w-full">
+    <div class="h-full w-full">
         <Pie :data="chartData" :options="options" />
     </div>
 </template>

@@ -1,23 +1,49 @@
 <script setup lang="ts">
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head } from "@inertiajs/vue3";
+import { router, usePage, Head } from "@inertiajs/vue3";
+
+const user = usePage().props.auth.user;
+
+const updateStyle = (style: number) => {
+    router.patch(
+        route("settings.dashboard-style"),
+        {
+            dashboard_style: style,
+        },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                router.visit(route("dashboard")); // ✅ BEST
+            },
+        },
+    );
+};
 </script>
 
 <template>
     <Head title="Settings" />
-
     <AuthenticatedLayout>
-        <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                Settings
-            </h2>
-        </template>
+        <div class="p-6 space-y-6">
+            <h1 class="text-xl font-bold">Dashboard Styles</h1>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">You're logged in!</div>
-                </div>
+            <p class="text-sm text-gray-500">
+                Current Style: {{ user.dashboard_style }}
+            </p>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button
+                    v-for="n in 9"
+                    :key="n"
+                    @click="updateStyle(n)"
+                    class="border rounded-lg p-4 hover:bg-gray-100 transition"
+                    :class="
+                        user.dashboard_style == n
+                            ? 'bg-blue-100 border-blue-500'
+                            : ''
+                    "
+                >
+                    Dashboard Style {{ n }}
+                </button>
             </div>
         </div>
     </AuthenticatedLayout>

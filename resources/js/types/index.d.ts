@@ -1,4 +1,5 @@
 export interface User {
+    dashboard_style: any;
     role: string;
     id: number;
     name: string;

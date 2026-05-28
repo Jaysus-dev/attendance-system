@@ -2,6 +2,7 @@
 
 
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\AttendanceController;
@@ -44,6 +45,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])
     ->name('dashboard');
 
+
+    Route::get('/settings', function () {
+    return Inertia::render('Settings');
+})->name('settings');
+
+  Route::patch('/settings/dashboard-style', [SettingsController::class, 'updateDashboardStyle'])
+    ->name('settings.dashboard-style');
  
     // STUDENTS
     Route::get('/students', [StudentController::class,'index',])->name('students'); 

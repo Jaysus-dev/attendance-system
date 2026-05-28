@@ -71,7 +71,32 @@ public function store(Request $request)
             'section_id' => $validated['section_id'],
             'year_level' => $validated['year_level'],
         ]);
+        
     });
+    
 
     return back()->with('success', 'Student created successfully.');
-}}
+}
+public function update(Request $request, Student $student)
+{
+    $request->validate([
+        'student_number' => 'required|string|max:255',
+        'fullname' => 'required|string|max:255',
+        'email' => 'required|email|max:255',
+        'parent_email' => 'nullable|email|max:255',
+        'course_id' => 'nullable|exists:courses,id',
+        'section_id' => 'nullable|exists:sections,id',
+        'year_level' => 'nullable|string|max:50',
+    ]);
+
+    $student->update([
+        'student_number' => $request->student_number,
+        'fullname' => $request->fullname,
+        'email' => $request->email,
+        'parent_email' => $request->parent_email,
+        'course_id' => $request->course_id,
+        'section_id' => $request->section_id,
+        'year_level' => $request->year_level,
+    ]);}
+
+}

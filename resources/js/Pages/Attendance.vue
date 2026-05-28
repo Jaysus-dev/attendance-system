@@ -87,16 +87,10 @@ const props = defineProps({
                                     {{ a.subject.subject_name }}
                                 </TableCell>
                                 <TableCell>
-                                    {{ a.year_level }}
+                                    {{ a.section?.year_level || "Not Set" }}
                                 </TableCell>
                                 <TableCell>
-                                    <Link
-                                        :href="route('attendance.show', a.id)"
-                                    >
-                                        <Button size="sm"
-                                            >Take Attendance</Button
-                                        >
-                                    </Link>
+                                    <Button size="sm">Take Attendance</Button>
                                 </TableCell>
                             </TableRow>
 

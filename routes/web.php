@@ -84,6 +84,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/attendance', [AttendanceController::class, 'index'])
         ->name('attendance');
+    Route::get('/attendance/class/{id}', [AttendanceController::class, 'take'])
+        ->name('attendance.take');
 
     // FUTURE:
     // Route::get('/my-classes')

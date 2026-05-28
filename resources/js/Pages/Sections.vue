@@ -44,6 +44,7 @@ type Course = {
 };
 
 type Section = {
+    year_level: string;
     id: number;
     section_name: string;
     course: Course;
@@ -89,6 +90,7 @@ const selectedSectionId = ref<number | null>(null);
 const form = useForm({
     course_id: "",
     section_name: "",
+    year_level: "",
 });
 
 /*
@@ -101,7 +103,7 @@ const resetForm = () => {
 
     form.course_id = "";
     form.section_name = "";
-
+    form.year_level = "";
     editMode.value = false;
     selectedSectionId.value = null;
 };
@@ -118,6 +120,7 @@ const editSection = (section: Section) => {
 
     form.course_id = String(section.course.id);
     form.section_name = section.section_name;
+    form.year_level = section.year_level;
 };
 
 /*
@@ -223,6 +226,18 @@ const submit = () => {
                                     @submit.prevent="submit"
                                     class="space-y-4"
                                 >
+                                    <select
+                                        v-model="form.year_level"
+                                        class="w-full border rounded-md px-3 py-2"
+                                    >
+                                        <option value="">
+                                            Select Year Level
+                                        </option>
+                                        <option>1st Year</option>
+                                        <option>2nd Year</option>
+                                        <option>3rd Year</option>
+                                        <option>4th Year</option>
+                                    </select>
                                     <!-- COURSE -->
                                     <select
                                         v-model="form.course_id"

@@ -10,6 +10,7 @@ class Section extends Model
 
         'course_id',
         'section_name',
+        'year_level'
     ];
 
 
@@ -22,8 +23,8 @@ class Section extends Model
     {
         return $this->hasMany(Student::class);
     }
-    public function getYearLevelAttribute()
-{
-    return $this->year_level;
-}
+  //  public function getYearLevelAttribute()
+//{
+  //  return $this->year_level;
+//}
 }

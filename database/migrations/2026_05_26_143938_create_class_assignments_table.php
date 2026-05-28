@@ -30,8 +30,6 @@ return new class extends Migration
         ->constrained()
         ->onDelete('cascade');
 
-    $table->string('year_level'); 
-
     $table->timestamps();
 });
     }

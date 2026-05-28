@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\ClassAssignment;
 use App\Models\Teacher;
 use App\Models\Course;
@@ -31,13 +32,24 @@ class ClassAssignmentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'teacher_id' => 'required',
-            'course_id' => 'required',
-            'section_id' => 'required',
-            'subject_id' => 'required',
+            'teacher_id' => 'required|exists:teachers,id',
+            'course_id' => 'required|exists:courses,id',
+            'section_id' => 'required|exists:sections,id',
+            'subject_id' => 'required|exists:subjects,id',
+
+            // IMPORTANT FIX
+            'year_level' => 'nullable|string',
         ]);
 
-        ClassAssignment::create($request->all());
+        ClassAssignment::create([
+            'teacher_id' => $request->teacher_id,
+            'course_id' => $request->course_id,
+            'section_id' => $request->section_id,
+            'subject_id' => $request->subject_id,
+
+            // SAFE HANDLING
+            'year_level' => $request->year_level ?? null,
+        ]);
 
         return back()->with('success', 'Assigned successfully');
     }
@@ -46,6 +58,6 @@ class ClassAssignmentController extends Controller
     {
         ClassAssignment::findOrFail($id)->delete();
 
-        return back();
+        return back()->with('success', 'Deleted successfully');
     }
 }

@@ -32,18 +32,22 @@ class SectionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'course_id' => ['required', 'exists:courses,id'],
-            'section_name' => ['required', 'string', 'max:255'],
-        ]);
+   public function store(Request $request)
+{
+    $request->validate([
+        'course_id' => 'required|exists:courses,id',
+        'section_name' => 'required',
+        'year_level' => 'required',
+    ]);
 
-        Section::create($validated);
+    Section::create([
+        'course_id' => $request->course_id,
+        'section_name' => $request->section_name,
+        'year_level' => $request->year_level,
+    ]);
 
-        return redirect()->back()->with('success', 'Section created successfully.');
-    }
-
+    return back()->with('success', 'Section created');
+}
     /**
      * Display the specified resource.
      */
@@ -63,13 +67,24 @@ class SectionController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Section $section)
-    {
-    $section->update($request->validate([
-        'course_id' => 'required',
+   public function update(Request $request, $id)
+{
+    $request->validate([
+        'course_id' => 'required|exists:courses,id',
         'section_name' => 'required',
-    ]));
-    }
+        'year_level' => 'required',
+    ]);
+
+    $section = Section::findOrFail($id);
+
+    $section->update([
+        'course_id' => $request->course_id,
+        'section_name' => $request->section_name,
+        'year_level' => $request->year_level,
+    ]);
+
+    return back()->with('success', 'Section updated');
+}
 
 
     /**

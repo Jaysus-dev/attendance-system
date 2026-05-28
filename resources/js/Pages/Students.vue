@@ -90,11 +90,17 @@ const selectedSection = ref("");
 const selectedYear = ref("");
 
 const courses = computed(() => [
-    ...new Set(props.students.map((s) => s.course.course_code)),
+    ...new Set(
+        props.students.filter((s) => s.course).map((s) => s.course.course_code),
+    ),
 ]);
 
 const sections = computed(() => [
-    ...new Set(props.students.map((s) => s.section.section_name)),
+    ...new Set(
+        props.students
+            .filter((s) => s.section)
+            .map((s) => s.section.section_name),
+    ),
 ]);
 
 const years = computed(() => [
@@ -117,11 +123,11 @@ const filteredStudents = computed(() => {
 
         const matchesCourse =
             !selectedCourse.value ||
-            student.course.course_code === selectedCourse.value;
+            student.course?.course_code === selectedCourse.value;
 
         const matchesSection =
             !selectedSection.value ||
-            student.section.section_name === selectedSection.value;
+            student.section?.section_name === selectedSection.value;
 
         const matchesYear =
             !selectedYear.value || student.year_level === selectedYear.value;
@@ -212,7 +218,7 @@ const editStudent = async (student: Student) => {
     form.clearErrors();
 
     // STEP 1: set course first (triggers section filter)
-    form.course_id = String(student.course.id);
+    form.course_id = student.course ? String(student.course.id) : "";
 
     // STEP 2: wait for filteredSections to update
     await nextTick();
@@ -225,7 +231,7 @@ const editStudent = async (student: Student) => {
     form.year_level = student.year_level;
 
     // STEP 4: set section LAST (important)
-    form.section_id = String(student.section.id);
+    form.section_id = student.section ? String(student.section.id) : "";
 };
 
 /*
@@ -424,7 +430,9 @@ const totalStudents = computed(() => props.students.length);
                                         v-model="form.year_level"
                                         class="w-full border px-3 py-2 rounded-md"
                                     >
-                                        <option value="">Year Level</option>
+                                        <option value="">
+                                            Select Year Level
+                                        </option>
                                         <option>1st Year</option>
                                         <option>2nd Year</option>
                                         <option>3rd Year</option>
@@ -462,13 +470,21 @@ const totalStudents = computed(() => props.students.length);
                                     student.student_number
                                 }}</TableCell>
                                 <TableCell>{{ student.fullname }}</TableCell>
+                                <TableCell>
+                                    {{
+                                        student.course?.course_code ||
+                                        "Not Assigned"
+                                    }}
+                                </TableCell>
+                                <TableCell>
+                                    {{
+                                        student.section?.section_name ||
+                                        "Not Assigned"
+                                    }}
+                                </TableCell>
                                 <TableCell>{{
-                                    student.course.course_code
+                                    student.year_level || "Not Assigned"
                                 }}</TableCell>
-                                <TableCell>{{
-                                    student.section.section_name
-                                }}</TableCell>
-                                <TableCell>{{ student.year_level }}</TableCell>
                                 <TableCell>{{ student.email }}</TableCell>
 
                                 <TableCell class="flex gap-2">

@@ -3,118 +3,84 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClassAssignment;
+use App\Models\Attendance;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-use App\Models\Attendance;
 use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
- public function index()
-{
-    $user = Auth::user();
+    public function index()
+    {
+        $user = Auth::user();
 
-    if (!$user) {
-        abort(403);
-    }
-
-    // ADMIN: see everything
-    if ($user->role === 'admin') {
-        $assignments = ClassAssignment::with(['course','section','subject'])->get();
-    }
-
-    // TEACHER: only own
-    elseif ($user->role === 'teacher') {
-
-        if ($user->status !== 'approved') {
+        if (!$user) {
             abort(403);
         }
 
-        if (!$user->teacher) {
-            abort(403, 'Teacher profile not found');
+        // =========================
+        // ADMIN: ALL ASSIGNMENTS
+        // =========================
+        if ($user->role === 'admin') {
+
+            $assignments = ClassAssignment::with([
+                'course',
+                'section',
+                'subject'
+            ])->get();
         }
 
-        $assignments = ClassAssignment::with(['course','section','subject'])
+        // =========================
+        // TEACHER: OWN ONLY
+        // =========================
+        elseif ($user->role === 'teacher') {
+
+            if ($user->status !== 'approved') {
+                abort(403);
+            }
+
+            if (!$user->teacher) {
+                abort(403, 'Teacher profile not found');
+            }
+
+            $assignments = ClassAssignment::with([
+                'course',
+                'section',
+                'subject'
+            ])
             ->where('teacher_id', $user->teacher->id)
             ->get();
+        }
+
+        else {
+            abort(403);
+        }
+
+        return Inertia::render('Attendance', [
+            'assignments' => $assignments,
+        ]);
     }
 
-    else {
-        abort(403);
-    }
-
-    return Inertia::render('Attendance', [
-        'assignments' => $assignments,
-    ]);
-}
-public function studentView()
-{
-    $user = Auth::user();
-
-    if (!$user->student) {
-        abort(403, 'Student profile not found');
-    }
-
-    $student = $user->student;
-
-    $attendance = Attendance::where('section_id', $student->section_id)
-        ->where('course_id', $student->course_id)
-        ->latest()
-        ->get();
-
-    return Inertia::render('Student/MyAttendance', [
-        'attendance' => $attendance,
-    ]);
-}
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    // =====================================
+    // STUDENT VIEW (SAFE VERSION)
+    // =====================================
+    public function studentView()
     {
-        //
-    }
+        $user = Auth::user();
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        if (!$user || !$user->student) {
+            abort(403, 'Student profile not found');
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Attendance $attendance)
-    {
-        //
-    }
+        $student = $user->student;
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Attendance $attendance)
-    {
-        //
-    }
+        $attendance = Attendance::where('section_id', $student->section_id)
+            ->where('course_id', $student->course_id)
+            ->latest()
+            ->get();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Attendance $attendance)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Attendance $attendance)
-    {
-        //
+        return Inertia::render('Student/MyAttendance', [
+            'attendance' => $attendance,
+        ]);
     }
 }

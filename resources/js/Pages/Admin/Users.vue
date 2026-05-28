@@ -125,8 +125,8 @@ const filteredUsers = computed(() => {
                                     <span
                                         :class="
                                             user.status === 'approved'
-                                                ? 'text-green-600'
-                                                : 'text-yellow-600'
+                                                ? 'text-green-600 capitalize font-semibold'
+                                                : 'text-yellow-600 capitalize font-semibold'
                                         "
                                     >
                                         {{ user.status }}

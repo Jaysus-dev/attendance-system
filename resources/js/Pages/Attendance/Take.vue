@@ -73,6 +73,7 @@ const isLocked = (studentId: number) => {
 const mark = (status: string, studentId: number) => {
     router.post(route("attendance.mark"), {
         student_id: studentId,
+        class_assignment_id: props.assignment.id,
         status,
     });
 };

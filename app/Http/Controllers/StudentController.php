@@ -104,21 +104,25 @@ public function mySubjects()
     $student = auth()->user()->student;
 
     if (!$student) {
-        abort(403, 'No student profile found');
+        abort(403);
     }
 
     $subjects = \App\Models\ClassAssignment::with('subject')
         ->where('course_id', $student->course_id)
         ->where('section_id', $student->section_id)
         ->get()
-        ->pluck('subject')
+        ->map(function ($class) {
+            return $class->subject;
+        })
+        ->filter()
         ->unique('id')
         ->values();
 
     return inertia('Student/Subjects', [
         'subjects' => $subjects,
     ]);
-}public function mySubjectClasses($id)
+}
+public function mySubjectClasses($id)
 {
     $student = auth()->user()->student;
 
@@ -131,11 +135,21 @@ public function mySubjects()
     ->where('subject_id', $id)
     ->where('course_id', $student->course_id)
     ->where('section_id', $student->section_id)
-    ->get();
+    ->get()
+    ->map(function ($class) use ($student) {
+
+        $attendance = \App\Models\Attendance::where('student_id', $student->id)
+            ->where('class_assignment_id', $class->id)
+            ->latest()
+            ->first();
+
+        $class->attendance_status = $attendance?->status;
+
+        return $class;
+    });
 
     return inertia('Student/SubjectClasses', [
         'classes' => $classes,
-        
     ]);
 }
 public function viewAttendance($class_id)

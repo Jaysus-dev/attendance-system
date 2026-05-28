@@ -6,9 +6,9 @@ const props = defineProps({
     subjects: Array,
 });
 
-const openSubject = (subject) => {
-    router.visit(route("student.subject.classes", subject.id));
-};
+function openSubject(id: number) {
+    router.visit(route('student.subject.classes', id));
+}
 </script>
 
 <template>

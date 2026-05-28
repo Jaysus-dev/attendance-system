@@ -110,6 +110,7 @@ const filteredClasses = computed(() => {
                                 <TableHead> Course </TableHead>
 
                                 <TableHead> Section </TableHead>
+                                <TableHead>Status</TableHead>
                             </TableRow>
                         </TableHeader>
 
@@ -136,6 +137,14 @@ const filteredClasses = computed(() => {
 
                                 <TableCell>
                                     {{ cls.section?.section_name }}
+                                </TableCell>
+                                <TableCell>
+                                    <span v-if="cls.attendance_status">
+                                        {{ cls.attendance_status }}
+                                    </span>
+                                    <span v-else class="text-muted-foreground">
+                                        No record
+                                    </span>
                                 </TableCell>
                             </TableRow>
 

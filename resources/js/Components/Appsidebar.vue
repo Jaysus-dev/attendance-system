@@ -165,12 +165,12 @@ const projects = computed(() => {
                 icon: MessageSquareWarning,
                 isActive: route().current("reports"),
             },
-            {
+            /** {
                 name: "Settings",
                 url: route("settings"),
                 icon: Settings,
                 isActive: route().current("settings"),
-            },
+            }, */
         ];
     }
 

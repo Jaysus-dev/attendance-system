@@ -1,5 +1,7 @@
 <?php
 
+
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\AttendanceController;
@@ -38,9 +40,11 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
+    
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])
+    ->name('dashboard');
 
-    Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
-
+ 
     // STUDENTS
     Route::get('/students', [StudentController::class,'index',])->name('students'); 
     Route::post('/students', [StudentController::class,'store',])->name('students.store'); 
@@ -140,6 +144,7 @@ Route::middleware(['auth'])->group(function () {
 
   Route::get('/reports', [AttendanceReportController::class, 'index'])
     ->name('reports');
+
 Route::get('/reports/pdf', [AttendanceReportController::class, 'exportPdf'])
     ->name('reports.pdf');
 

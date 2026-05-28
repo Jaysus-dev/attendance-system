@@ -136,7 +136,11 @@ const mark = (status: string, studentId: number) => {
                         </div>
                     </div>
 
-                    <Input v-model="search" placeholder="Search student..." />
+                    <Input
+                        v-model="search"
+                        placeholder="Search student..."
+                        class="w-full max-w-lg"
+                    />
                 </CardHeader>
 
                 <CardContent>
@@ -165,7 +169,22 @@ const mark = (status: string, studentId: number) => {
                                     <!-- LOCKED -->
                                     <div
                                         v-if="isLocked(student.id)"
-                                        class="font-bold"
+                                        :class="{
+                                            'text-green-600 font-semibold uppercase':
+                                                getStatus(
+                                                    student.id,
+                                                )?.toLowerCase() === 'present',
+
+                                            'text-red-600 font-semibold uppercase':
+                                                getStatus(
+                                                    student.id,
+                                                )?.toLowerCase() === 'absent',
+
+                                            'text-yellow-600 font-semibold uppercase':
+                                                getStatus(
+                                                    student.id,
+                                                )?.toLowerCase() === 'late',
+                                        }"
                                     >
                                         {{ getStatus(student.id) }}
                                     </div>

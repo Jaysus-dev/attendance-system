@@ -140,6 +140,8 @@ Route::middleware(['auth'])->group(function () {
 
   Route::get('/reports', [AttendanceReportController::class, 'index'])
     ->name('reports');
+Route::get('/reports/pdf', [AttendanceReportController::class, 'exportPdf'])
+    ->name('reports.pdf');
 
     Route::get('/attendance/take/{id}', [AttendanceController::class, 'take'])
         ->name('attendance.take');

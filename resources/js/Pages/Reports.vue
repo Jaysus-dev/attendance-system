@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, router } from "@inertiajs/vue3";
-import { ref, computed, watch } from "vue";
+import { ref, computed } from "vue";
 
 /* SHADCN */
 import { Card, CardHeader, CardTitle, CardContent } from "@/Components/ui/card";
@@ -25,9 +25,9 @@ import {
 } from "@/Components/ui/table";
 
 /*
-|----------------------------------
+|--------------------------------------------------------------------------
 | PROPS
-|----------------------------------
+|--------------------------------------------------------------------------
 */
 const props = defineProps<{
     attendances: any[];
@@ -37,23 +37,9 @@ const props = defineProps<{
 }>();
 
 /*
-|----------------------------------
-| 🔥 FIX: LOCAL REACTIVE COPY
-|----------------------------------
-*/
-const localAttendances = ref([...props.attendances]);
-
-watch(
-    () => props.attendances,
-    (newVal) => {
-        localAttendances.value = [...newVal];
-    },
-);
-
-/*
-|----------------------------------
+|--------------------------------------------------------------------------
 | FILTER STATE
-|----------------------------------
+|--------------------------------------------------------------------------
 */
 const start_date = ref(props.filters?.start_date ?? "");
 const end_date = ref(props.filters?.end_date ?? "");
@@ -61,9 +47,19 @@ const course_id = ref(props.filters?.course_id ?? "all");
 const subject_id = ref(props.filters?.subject_id ?? "all");
 
 /*
-|----------------------------------
+|--------------------------------------------------------------------------
+| NORMALIZE STATUS (IMPORTANT FIX 🔥)
+|--------------------------------------------------------------------------
+*/
+const normalizeStatus = (status: string) => {
+    if (!status) return "";
+    return status.toLowerCase();
+};
+
+/*
+|--------------------------------------------------------------------------
 | FILTER ACTION
-|----------------------------------
+|--------------------------------------------------------------------------
 */
 const filter = () => {
     router.get(route("reports"), {
@@ -75,20 +71,47 @@ const filter = () => {
 };
 
 /*
-|----------------------------------
-| COUNTERS (NOW FIXED SYNC ISSUE)
-|----------------------------------
+|--------------------------------------------------------------------------
+| SINGLE SOURCE OF TRUTH (NO LOCAL COPY)
+|--------------------------------------------------------------------------
+*/
+const filteredAttendances = computed(() => props.attendances);
+
+const downloadPdf = () => {
+    window.open(
+        route("reports.pdf", {
+            start_date: start_date.value,
+            end_date: end_date.value,
+            course_id: course_id.value,
+            subject_id: subject_id.value,
+        }),
+        "_blank",
+    );
+};
+/*
+|--------------------------------------------------------------------------
+| COUNTERS (FIXED SYNC)
+|--------------------------------------------------------------------------
 */
 const totalPresent = computed(
-    () => localAttendances.value.filter((a) => a.status === "Present").length,
+    () =>
+        filteredAttendances.value.filter(
+            (a) => normalizeStatus(a.status) === "present",
+        ).length,
 );
 
 const totalAbsent = computed(
-    () => localAttendances.value.filter((a) => a.status === "Absent").length,
+    () =>
+        filteredAttendances.value.filter(
+            (a) => normalizeStatus(a.status) === "absent",
+        ).length,
 );
 
 const totalLate = computed(
-    () => localAttendances.value.filter((a) => a.status === "Late").length,
+    () =>
+        filteredAttendances.value.filter(
+            (a) => normalizeStatus(a.status) === "late",
+        ).length,
 );
 </script>
 
@@ -97,7 +120,7 @@ const totalLate = computed(
 
     <AuthenticatedLayout>
         <div class="p-6 space-y-6">
-            <!-- FILTER + STATS CARD -->
+            <!-- MAIN CARD -->
             <Card>
                 <CardHeader>
                     <CardTitle>Attendance Report</CardTitle>
@@ -146,10 +169,10 @@ const totalLate = computed(
                         <Button @click="filter">Filter</Button>
                     </div>
 
-                    <!-- STATS -->
+                    <!-- STATS (FIXED + ALWAYS SYNCED) -->
                     <div class="grid grid-cols-3 gap-4 mt-6">
                         <div class="p-4 border rounded-lg text-center">
-                            <div class="text-green-600 text-xl font-bold">
+                            <div class="text-green-600 text-2xl font-bold">
                                 {{ totalPresent }}
                             </div>
                             <div class="text-sm text-muted-foreground">
@@ -158,7 +181,7 @@ const totalLate = computed(
                         </div>
 
                         <div class="p-4 border rounded-lg text-center">
-                            <div class="text-red-600 text-xl font-bold">
+                            <div class="text-red-600 text-2xl font-bold">
                                 {{ totalAbsent }}
                             </div>
                             <div class="text-sm text-muted-foreground">
@@ -167,7 +190,7 @@ const totalLate = computed(
                         </div>
 
                         <div class="p-4 border rounded-lg text-center">
-                            <div class="text-yellow-600 text-xl font-bold">
+                            <div class="text-yellow-600 text-2xl font-bold">
                                 {{ totalLate }}
                             </div>
                             <div class="text-sm text-muted-foreground">
@@ -175,6 +198,9 @@ const totalLate = computed(
                             </div>
                         </div>
                     </div>
+                    <Button class="mt-4" @click="downloadPdf">
+                        Export PDF
+                    </Button>
                 </CardHeader>
             </Card>
 
@@ -197,7 +223,10 @@ const totalLate = computed(
                         </TableHeader>
 
                         <TableBody>
-                            <TableRow v-for="a in localAttendances" :key="a.id">
+                            <TableRow
+                                v-for="a in filteredAttendances"
+                                :key="a.id"
+                            >
                                 <TableCell>
                                     {{ a.student?.fullname }}
                                 </TableCell>
@@ -218,12 +247,15 @@ const totalLate = computed(
                                 <TableCell>
                                     <span
                                         :class="{
-                                            'text-green-600 font-semibold':
-                                                a.status === 'Present',
-                                            'text-red-600 font-semibold':
-                                                a.status === 'Absent',
-                                            'text-yellow-600 font-semibold':
-                                                a.status === 'Late',
+                                            'text-green-600 font-semibold uppercase':
+                                                normalizeStatus(a.status) ===
+                                                'present',
+                                            'text-red-600 font-semibold uppercase':
+                                                normalizeStatus(a.status) ===
+                                                'absent',
+                                            'text-yellow-600 font-semibold uppercase':
+                                                normalizeStatus(a.status) ===
+                                                'late',
                                         }"
                                     >
                                         {{ a.status }}

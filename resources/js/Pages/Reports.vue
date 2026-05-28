@@ -219,11 +219,11 @@ const totalLate = computed(
                                     <span
                                         :class="{
                                             'text-green-600 font-semibold':
-                                                a.status === 'present',
+                                                a.status === 'Present',
                                             'text-red-600 font-semibold':
-                                                a.status === 'absent',
+                                                a.status === 'Absent',
                                             'text-yellow-600 font-semibold':
-                                                a.status === 'late',
+                                                a.status === 'Late',
                                         }"
                                     >
                                         {{ a.status }}

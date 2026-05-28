@@ -89,6 +89,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // Route::get('/my-classes')
 });
 
+Route::middleware(['auth', 'role:student'])->group(function () {
+    Route::get('/my-attendance', [AttendanceController::class, 'studentView'])
+        ->name('student.attendance');
+});
+
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

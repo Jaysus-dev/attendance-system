@@ -18,6 +18,15 @@ return new class extends Migration
                 ->onDelete('cascade');
             $table->foreignId('teacher_id')
                 ->constrained('users');
+            $table->foreignId('course_id')
+                ->nullable()
+                ->constrained()
+                ->nullOnDelete();
+
+            $table->foreignId('section_id')
+                ->nullable()
+                ->constrained()
+                ->nullOnDelete();
             $table->date('date');
             $table->enum('status', [
                 'Present',

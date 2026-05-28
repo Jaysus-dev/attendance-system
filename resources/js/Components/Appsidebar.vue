@@ -110,6 +110,15 @@ const navMain = computed(() => {
             },
         ];
     }
+    if (user.value.role === "student") {
+        return [
+            {
+                title: "My Attendance",
+                url: route("student.attendance"),
+                icon: CalendarCheck,
+            },
+        ];
+    }
 
     // 👨‍🏫 TEACHER SIDEBAR
     return [

@@ -65,6 +65,10 @@ class RegisteredUserController extends Controller
             'student_number' => 'STU-' . $user->id,
             'fullname' => $user->name,
             'email' => $user->email,
+            'parent_email' => null,
+            'course_id' => null,     // TEMP fallback (or assign later)
+            'section_id' => null,    // TEMP fallback
+            'year_level' => null,
     ]);
 }
 

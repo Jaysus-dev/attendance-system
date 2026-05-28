@@ -8,6 +8,7 @@ class Student extends Model
 {
     protected $fillable = [
 
+        'user_id',
         'student_number',
 
         'fullname',
@@ -36,5 +37,9 @@ class Student extends Model
     public function attendance()
 {
     return $this->hasMany(Attendance::class);
+}
+public function user()
+{
+    return $this->belongsTo(User::class);
 }
 }

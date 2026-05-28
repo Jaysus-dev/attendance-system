@@ -37,73 +37,41 @@ class StudentController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-
-            'student_number' => [
-                'required',
-                'unique:students,student_number',
-            ],
-
-            'fullname' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-
-            'email' => [
-                'required',
-                'email',
-                'unique:students,email',
-            ],
-
-            'parent_email' => [
-                'required',
-                'email',
-            ],
-
-            'course_id' => [
-                'required',
-                'exists:courses,id',
-            ],
-
-            'section_id' => [
-                'required',
-                'exists:sections,id',
-            ],
-
-            'year_level' => [
-                'required',
-            ],
-        ]);
-
-        Student::create($validated);
-
-        return redirect()->back()->with([
-            'success' => 'Student added successfully.',
-        ]);
-    }
-    public function update(Request $request, Student $student)
-    {
+public function store(Request $request)
+{
     $validated = $request->validate([
-        'student_number' => 'sometimes|required|unique:students,student_number,' . $student->id,
-        'fullname' => 'sometimes|required|string|max:255',
-        'email' => 'sometimes|required|email|unique:students,email,' . $student->id,
-        'parent_email' => 'sometimes|required|email',
-        'course_id' => 'sometimes|required|exists:courses,id',
-        'section_id' => 'sometimes|required|exists:sections,id',
-        'year_level' => 'sometimes|required',
+        'student_number' => 'required|unique:students',
+        'fullname' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email',
+        'parent_email' => 'nullable|email',
+        'course_id' => 'required|exists:courses,id',
+        'section_id' => 'required|exists:sections,id',
+        'year_level' => 'required',
     ]);
 
-    $student->update($validated);
+     DB::transaction(function () use ($validated) {
 
-    return back()->with('success', 'Student updated successfully.');
-    }
-    public function destroy(Student $student)
-    {
-    $student->delete();
+        // 1. CREATE USER FIRST
+        $user = User::create([
+            'name' => $validated['fullname'],
+            'email' => $validated['email'],
+            'password' => Hash::make('password123'),
+            'role' => 'student',
+            'status' => 'approved',
+        ]);
 
-    return back()->with('success', 'Student deleted successfully.');
-    }
-}
+        // 2. Create student profile
+         Student::create([
+            'user_id' => $user->id,   // 🔥 THIS FIXES YOUR ERROR
+            'student_number' => $validated['student_number'],
+            'fullname' => $validated['fullname'],
+            'email' => $validated['email'],
+            'parent_email' => $validated['parent_email'] ?? null,
+            'course_id' => $validated['course_id'],
+            'section_id' => $validated['section_id'],
+            'year_level' => $validated['year_level'],
+        ]);
+    });
+
+    return back()->with('success', 'Student created successfully.');
+}}

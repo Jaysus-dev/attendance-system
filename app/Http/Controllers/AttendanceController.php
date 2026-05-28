@@ -50,6 +50,25 @@ class AttendanceController extends Controller
         'assignments' => $assignments,
     ]);
 }
+public function studentView()
+{
+    $user = Auth::user();
+
+    if (!$user->student) {
+        abort(403, 'Student profile not found');
+    }
+
+    $student = $user->student;
+
+    $attendance = Attendance::where('section_id', $student->section_id)
+        ->where('course_id', $student->course_id)
+        ->latest()
+        ->get();
+
+    return Inertia::render('Student/MyAttendance', [
+        'attendance' => $attendance,
+    ]);
+}
 
     /**
      * Show the form for creating a new resource.

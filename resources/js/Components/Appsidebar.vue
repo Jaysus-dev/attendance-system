@@ -114,7 +114,7 @@ const navMain = computed(() => {
         return [
             {
                 title: "My Attendance",
-                url: route("student.attendance"),
+                url: route("student.subjects"),
                 icon: CalendarCheck,
             },
         ];

@@ -111,20 +111,30 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/teachers/{id}/classes', [AdminController::class, 'teacherClasses'])
         ->name('admin.teacher.classes');
 
+    Route::get('/admin/students/{id}/subjects', [AdminController::class, 'studentSubjects'])
+    ->name('admin.student.subjects');
+
+Route::get('/admin/subjects/{id}/classes', [AdminController::class, 'subjectClasses'])
+    ->name('admin.subject.classes');    
+
 });
 
     Route::middleware(['auth', 'role:teacher'])->group(function () {
 
     Route::get('/attendance', [AttendanceController::class, 'index'])
         ->name('attendance');
-   
-    // FUTURE:
-    // Route::get('/my-classes')
+
 });
 
 Route::middleware(['auth', 'role:student'])->group(function () {
-    Route::get('/my-attendance', [AttendanceController::class, 'studentView'])
-        ->name('student.attendance');
+    Route::get('/my-subjects', [StudentController::class, 'mySubjects'])
+        ->name('student.subjects');
+
+    Route::get('/my-subjects/{id}/classes', [StudentController::class, 'mySubjectClasses'])
+        ->name('student.subject.classes');
+
+    Route::get('/my-attendance/{class_id}', [StudentController::class, 'viewAttendance'])
+        ->name('student.attendance.view');
 });
 
 Route::middleware(['auth'])->group(function () {

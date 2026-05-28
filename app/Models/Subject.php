@@ -15,11 +15,21 @@ class Subject extends Model
     ];
 
     public function teacher()
-{
+    {
     return $this->belongsTo(Teacher::class, 'teacher_id');
-}
- public function course()
+    }
+    public function course()
     {
         return $this->belongsTo(Course::class);
     }
+    public function students()
+
+{
+    return $this->belongsToMany(Student::class, 'student_subject');
+}
+
+public function classes()
+{
+    return $this->hasMany(ClassAssignment::class);
+}
 }

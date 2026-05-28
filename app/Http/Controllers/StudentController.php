@@ -99,4 +99,56 @@ public function update(Request $request, Student $student)
         'year_level' => $request->year_level,
     ]);}
 
+public function mySubjects()
+{
+    $student = auth()->user()->student;
+
+    if (!$student) {
+        abort(403, 'No student profile found');
+    }
+
+    $subjects = \App\Models\ClassAssignment::with('subject')
+        ->where('course_id', $student->course_id)
+        ->where('section_id', $student->section_id)
+        ->get()
+        ->pluck('subject')
+        ->unique('id')
+        ->values();
+
+    return inertia('Student/Subjects', [
+        'subjects' => $subjects,
+    ]);
+}public function mySubjectClasses($id)
+{
+    $student = auth()->user()->student;
+
+    $classes = \App\Models\ClassAssignment::with([
+        'teacher',
+        'course',
+        'section',
+        'subject'
+    ])
+    ->where('subject_id', $id)
+    ->where('course_id', $student->course_id)
+    ->where('section_id', $student->section_id)
+    ->get();
+
+    return inertia('Student/SubjectClasses', [
+        'classes' => $classes,
+        
+    ]);
+}
+public function viewAttendance($class_id)
+{
+    $student = auth()->user()->student;
+
+    $attendance = \App\Models\Attendance::where('student_id', $student->id)
+        ->where('class_assignment_id', $class_id)
+        ->get();
+
+    return \Inertia\Inertia::render('Student/AttendanceView', [
+        'attendance' => $attendance,
+    ]);
+}
+
 }

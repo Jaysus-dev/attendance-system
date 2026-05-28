@@ -14,6 +14,11 @@ return new class extends Migration
         Schema::create('class_assignments', function (Blueprint $table) {
     $table->id();
 
+      $table->foreignId('class_assignment_id')
+            ->nullable()
+            ->constrained()
+            ->onDelete('cascade');
+
     $table->foreignId('teacher_id')
         ->constrained()
         ->onDelete('cascade');

@@ -69,52 +69,48 @@ class AttendanceController extends Controller
             'attendance' => $attendance,
         ]);
     }
+public function markAttendance(Request $request)
+{
+    $request->validate([
+        'student_id' => 'required|exists:students,id',
+        'status' => 'required|string',
+        'class_assignment_id' => 'required|exists:class_assignments,id',
+    ]);
 
-    public function markAttendance(Request $request)
-    {
-        $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'status' => 'required|string',
+    $student = Student::findOrFail($request->student_id);
+    $today = now()->toDateString();
+
+    $existing = Attendance::where('student_id', $student->id)
+        ->where('class_assignment_id', $request->class_assignment_id)
+        ->whereDate('date', $today)
+        ->first();
+
+    if ($existing) {
+
+        $minutes = $existing->created_at->diffInMinutes(now());
+
+        // 🔒 5-minute lock
+        if ($minutes >= 5) {
+            return back()->with('error', 'Attendance is locked after 5 minutes');
+        }
+
+        $existing->update([
+            'status' => $request->status,
         ]);
 
-        $student = Student::findOrFail($request->student_id);
-        $today = now()->toDateString();
+    } else {
 
-        $existing = Attendance::where('student_id', $student->id)
-            ->whereDate('date', $today)
-            ->first();
-
-        if ($existing) {
-
-            $minutes = $existing->created_at->diffInMinutes(now());
-
-            // 🔒 REAL LOCK (5 MINUTES)
-            if ($minutes >= 5) {
-                return back()->with('error', 'Attendance locked after 5 minutes');
-            }
-
-            $existing->update([
-                'status' => $request->status,
-            ]);
-
-        } else {
-
-            Attendance::create([
-                'student_id' => $student->id,
-                'teacher_id' => auth()->id(),
-                'course_id' => $student->course_id,
-                'section_id' => $student->section_id,
-                'status' => $request->status,
-                'date' => now(),
-            ]);
-        }
-
-        // 📧 EMAIL PARENT
-        if ($student->parent_email) {
-            Mail::to($student->parent_email)
-                ->send(new AttendanceMail($student, $request->status));
-        }
-
-        return back();
+        Attendance::create([
+            'student_id' => $student->id,
+            'teacher_id' => auth()->id(),
+            'class_assignment_id' => $request->class_assignment_id,
+            'course_id' => $student->course_id,
+            'section_id' => $student->section_id,
+            'status' => $request->status,
+            'date' => now(),
+            'marked_at' => now(),
+        ]);
     }
-}
+
+    return back();
+}}

@@ -55,7 +55,7 @@ class AuthenticatedSessionController extends Controller
     }
      // STUDENT
     if ($user->role === 'student') {
-        return redirect('/my-attendance');
+        return redirect('/my-subjects');
     }
 
     return redirect('/');

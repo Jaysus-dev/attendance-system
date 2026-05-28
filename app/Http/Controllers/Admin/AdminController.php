@@ -55,6 +55,26 @@ public function teacherClasses($id)
         'teacher' => $teacher,
         'assignments' => $assignments,
     ]);
-}
+}public function studentSubjects($id)
+{
+    $student = Student::with('subjects')->findOrFail($id);
 
+    return Inertia::render('Admin/StudentSubjects', [
+        'student' => $student,
+        'subjects' => $student->subjects,
+    ]);
+}
+public function subjectClasses($id)
+{
+    $subject = Subject::findOrFail($id);
+
+    $classes = ClassAssignment::with(['teacher','course','section'])
+        ->where('subject_id', $id)
+        ->get();
+
+    return Inertia::render('Admin/SubjectClasses', [
+        'subject' => $subject,
+        'classes' => $classes,
+    ]);
+}
 }

@@ -33,4 +33,8 @@ public function subject()
 {
     return $this->belongsTo(Subject::class);
 }
+public function attendances()
+{
+    return $this->hasMany(Attendance::class);
+}
 }

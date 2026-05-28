@@ -30,4 +30,31 @@ class AdminController extends Controller
 
         return back()->with('success', 'User rejected.');
     }
+
+
+    public function teachers()
+{
+    return Inertia::render('Admin/Teachers', [
+        'teachers' => \App\Models\Teacher::all(),
+    ]);
+}
+
+public function teacherClasses($id)
+{
+    $teacher = \App\Models\Teacher::findOrFail($id);
+
+    $assignments = \App\Models\ClassAssignment::with([
+        'course',
+        'section',
+        'subject'
+    ])
+    ->where('teacher_id', $id)
+    ->get();
+
+    return Inertia::render('Admin/TeacherClasses', [
+        'teacher' => $teacher,
+        'assignments' => $assignments,
+    ]);
+}
+
 }

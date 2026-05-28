@@ -78,15 +78,33 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/users/{user}/reject', [AdminController::class, 'reject'])
     ->name('admin.users.reject');
 
+    Route::get('/admin/attendance', function () {
+    $assignments = \App\Models\ClassAssignment::with([
+        'teacher',
+        'course',
+        'section',
+        'subject'
+    ])->get();
+
+    return Inertia::render('Admin/Attendance', [
+        'assignments' => $assignments,
+    ]);
+
+})->name('admin.attendance');
+    
+    Route::get('/admin/teachers', [AdminController::class, 'teachers'])
+        ->name('admin.teachers');
+
+    Route::get('/admin/teachers/{id}/classes', [AdminController::class, 'teacherClasses'])
+        ->name('admin.teacher.classes');
+
 });
 
     Route::middleware(['auth', 'role:teacher'])->group(function () {
 
     Route::get('/attendance', [AttendanceController::class, 'index'])
         ->name('attendance');
-    Route::get('/attendance/class/{id}', [AttendanceController::class, 'take'])
-        ->name('attendance.take');
-
+   
     // FUTURE:
     // Route::get('/my-classes')
 });
@@ -98,9 +116,14 @@ Route::middleware(['auth', 'role:student'])->group(function () {
 
 Route::middleware(['auth'])->group(function () {
 
+    Route::get('/attendance/take/{id}', [AttendanceController::class, 'take'])
+        ->name('attendance.take');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+
 });
 
 Route::get('/pending-approval', function () {

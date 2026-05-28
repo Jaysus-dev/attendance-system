@@ -11,55 +11,25 @@ use Illuminate\Http\Request;
 class AttendanceController extends Controller
 {
     public function index()
-    {
-        $user = Auth::user();
+{
+    $user = Auth::user();
 
-        if (!$user) {
-            abort(403);
-        }
-
-        // =========================
-        // ADMIN: ALL ASSIGNMENTS
-        // =========================
-        if ($user->role === 'admin') {
-
-            $assignments = ClassAssignment::with([
-                'course',
-                'section',
-                'subject'
-            ])->get();
-        }
-
-        // =========================
-        // TEACHER: OWN ONLY
-        // =========================
-        elseif ($user->role === 'teacher') {
-
-            if ($user->status !== 'approved') {
-                abort(403);
-            }
-
-            if (!$user->teacher) {
-                abort(403, 'Teacher profile not found');
-            }
-
-            $assignments = ClassAssignment::with([
-                'course',
-                'section',
-                'subject'
-            ])
-            ->where('teacher_id', $user->teacher->id)
-            ->get();
-        }
-
-        else {
-            abort(403);
-        }
-
-        return Inertia::render('Attendance', [
-            'assignments' => $assignments,
-        ]);
+    if (!$user->teacher) {
+        abort(403);
     }
+
+    $assignments = ClassAssignment::with([
+        'course',
+        'section',
+        'subject'
+    ])
+    ->where('teacher_id', $user->teacher->id)
+    ->get();
+
+    return Inertia::render('Attendance', [
+        'assignments' => $assignments,
+    ]);
+}
 
     // =====================================
     // STUDENT VIEW (SAFE VERSION)
@@ -83,21 +53,72 @@ class AttendanceController extends Controller
             'attendance' => $attendance,
         ]);
     }
-    public function take($id)
+public function take($id)
 {
+    $user = Auth::user();
+
     $assignment = ClassAssignment::with([
+        'teacher',
         'course',
         'section',
         'subject'
     ])->findOrFail($id);
 
-    $students = \App\Models\Student::where('section_id', $assignment->section_id)
-        ->where('course_id', $assignment->course_id)
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN CAN ACCESS ALL
+    |--------------------------------------------------------------------------
+    */
+    if ($user->role === 'admin') {
+
+        $students = \App\Models\Student::where(
+            'section_id',
+            $assignment->section_id
+        )
+        ->where(
+            'course_id',
+            $assignment->course_id
+        )
         ->get();
 
-    return Inertia::render('Attendance/Take', [
-        'assignment' => $assignment,
-        'students' => $students,
-    ]);
+        return Inertia::render('Attendance/Take', [
+            'assignment' => $assignment,
+            'students' => $students,
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | TEACHER CAN ACCESS ONLY OWN CLASS
+    |--------------------------------------------------------------------------
+    */
+    if ($user->role === 'teacher') {
+
+        if (!$user->teacher) {
+            abort(403);
+        }
+
+        // SECURITY CHECK
+        if ($assignment->teacher_id !== $user->teacher->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        $students = \App\Models\Student::where(
+            'section_id',
+            $assignment->section_id
+        )
+        ->where(
+            'course_id',
+            $assignment->course_id
+        )
+        ->get();
+
+        return Inertia::render('Attendance/Take', [
+            'assignment' => $assignment,
+            'students' => $students,
+        ]);
+    }
+
+    abort(403);
 }
 }

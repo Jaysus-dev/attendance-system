@@ -149,9 +149,9 @@ const projects = computed(() => {
             },
             {
                 name: "Attendance",
-                url: route("attendance"),
+                url: route("admin.teachers"),
                 icon: CalendarCheck,
-                isActive: route().current("attendance"),
+                isActive: route().current("admin.teachers"),
             },
             {
                 name: "Users",

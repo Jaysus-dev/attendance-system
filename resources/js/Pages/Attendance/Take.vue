@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, router } from "@inertiajs/vue3";
-import { computed, ref, reactive } from "vue";
+import { computed, ref } from "vue";
 
 import {
     Card,
@@ -23,80 +23,73 @@ import {
 import { Input } from "@/Components/ui/input";
 import { Users } from "lucide-vue-next";
 
-/* --------------------------
-   PROPS
---------------------------- */
+/*
+|---------------------------
+| PROPS
+|---------------------------
+*/
 const props = defineProps<{
     assignment: any;
     students: any[];
     attendance: Record<string, any>;
 }>();
 
-/* --------------------------
-   LOCAL STATE (IMPORTANT FIX)
---------------------------- */
-const localAttendance = reactive<Record<string, any>>({
-    ...props.attendance,
-});
-
-/* --------------------------
-   SEARCH
---------------------------- */
+/*
+|---------------------------
+| SEARCH
+|---------------------------
+*/
 const search = ref("");
 
 const filteredStudents = computed(() => {
     const q = search.value.toLowerCase();
 
-    return props.students.filter((s) => {
-        return (
+    return props.students.filter(
+        (s) =>
             s.fullname.toLowerCase().includes(q) ||
             s.student_number.toLowerCase().includes(q) ||
-            s.email.toLowerCase().includes(q)
-        );
-    });
+            s.email.toLowerCase().includes(q),
+    );
 });
 
-/* --------------------------
-   KEY
---------------------------- */
+/*
+|---------------------------
+| KEY
+|---------------------------
+*/
 const getKey = (studentId: number) => `${studentId}-${props.assignment.id}`;
 
-/* --------------------------
-   GET STATUS
---------------------------- */
+/*
+|---------------------------
+| STATUS (FROM SERVER)
+|---------------------------
+*/
 const getStatus = (studentId: number) => {
-    return localAttendance[getKey(studentId)]?.status;
+    return props.attendance?.[getKey(studentId)]?.status;
 };
 
-/* --------------------------
-   LOCK (5 MINUTES FIX)
---------------------------- */
+/*
+|---------------------------
+| LOCK (WORKING AFTER REFRESH)
+|---------------------------
+*/
 const isLocked = (studentId: number) => {
-    const record = localAttendance[getKey(studentId)];
+    const record = props.attendance?.[getKey(studentId)];
 
     if (!record?.created_at) return false;
 
     const minutes =
         (Date.now() - new Date(record.created_at).getTime()) / 60000;
 
-    return minutes >= 5;
+    return minutes >= 0;
 };
 
-/* --------------------------
-   MARK ATTENDANCE
---------------------------- */
+/*
+|---------------------------
+| MARK ATTENDANCE
+|---------------------------
+*/
 const mark = (status: string, studentId: number) => {
-    const key = getKey(studentId);
-
-    // update UI instantly
-    localAttendance[key] = {
-        student_id: studentId,
-        class_assignment_id: props.assignment.id,
-        status,
-        created_at:
-            localAttendance[key]?.created_at ?? new Date().toISOString(),
-    };
-
     router.post(
         route("attendance.mark"),
         {
@@ -124,7 +117,6 @@ const mark = (status: string, studentId: number) => {
                         {{ assignment.course.course_name }} -
                         {{ assignment.section.section_name }}
                     </CardTitle>
-
                     <CardDescription>
                         {{ assignment.subject.subject_name }}
                     </CardDescription>
@@ -136,7 +128,6 @@ const mark = (status: string, studentId: number) => {
                 <CardHeader>
                     <div class="flex justify-between">
                         <CardTitle>Students</CardTitle>
-
                         <div
                             class="flex items-center gap-2 text-muted-foreground"
                         >
@@ -145,12 +136,7 @@ const mark = (status: string, studentId: number) => {
                         </div>
                     </div>
 
-                    <div class="mt-4">
-                        <Input
-                            v-model="search"
-                            placeholder="Search student..."
-                        />
-                    </div>
+                    <Input v-model="search" placeholder="Search student..." />
                 </CardHeader>
 
                 <CardContent>

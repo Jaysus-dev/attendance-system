@@ -456,7 +456,7 @@ const totalStudents = computed(() => props.students.length);
                                 <TableHead>Course</TableHead>
                                 <TableHead>Section</TableHead>
                                 <TableHead>Year Level</TableHead>
-                                <TableHead>Email</TableHead>
+                                <TableHead>Parent Email</TableHead>
                                 <TableHead>Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -485,7 +485,9 @@ const totalStudents = computed(() => props.students.length);
                                 <TableCell>{{
                                     student.year_level || "Not Assigned"
                                 }}</TableCell>
-                                <TableCell>{{ student.email }}</TableCell>
+                                <TableCell>{{
+                                    student.parent_email
+                                }}</TableCell>
 
                                 <TableCell class="flex gap-2">
                                     <Button

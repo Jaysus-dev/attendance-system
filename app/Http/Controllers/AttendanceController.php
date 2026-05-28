@@ -47,14 +47,14 @@ class AttendanceController extends Controller
             ->where('course_id', $assignment->course_id)
             ->get();
 
-        // ✅ FIXED ATTENDANCE MAPPING
+        // TODAY ATTENDANCE MAP
         $attendance = Attendance::where('class_assignment_id', $assignment->id)
             ->whereIn('student_id', $students->pluck('id'))
             ->whereDate('date', now())
             ->get()
-            ->keyBy(function ($item) {
-                return $item->student_id . '-' . $item->class_assignment_id;
-            });
+            ->keyBy(fn ($item) =>
+                $item->student_id . '-' . $item->class_assignment_id
+            );
 
         return Inertia::render('Attendance/Take', [
             'assignment' => $assignment,
@@ -79,40 +79,30 @@ class AttendanceController extends Controller
             ->whereDate('date', $today)
             ->first();
 
+        // 🔒 IMMEDIATE LOCK (NO EDIT ALLOWED)
         if ($existing) {
+            return back()->with('error', 'Attendance already marked and locked.');
+        }
 
-            $minutes = $existing->created_at->diffInMinutes(now());
+        Attendance::create([
+            'student_id' => $student->id,
+            'teacher_id' => auth()->id(),
+            'class_assignment_id' => $request->class_assignment_id,
+            'course_id' => $student->course_id,
+            'section_id' => $student->section_id,
+            'status' => $request->status,
+            'date' => now(),
+            'marked_at' => now(),
+        ]);
 
-            if ($minutes >= 5) {
-                return back()->with('error', 'Attendance is locked after 5 minutes');
+        // EMAIL
+        try {
+            if ($student->parent_email) {
+                Mail::to($student->parent_email)
+                    ->send(new AttendanceMail($student, $request->status));
             }
-
-            $existing->update([
-                'status' => $request->status,
-            ]);
-
-        } else {
-
-            Attendance::create([
-                'student_id' => $student->id,
-                'teacher_id' => auth()->id(),
-                'class_assignment_id' => $request->class_assignment_id,
-                'course_id' => $student->course_id,
-                'section_id' => $student->section_id,
-                'status' => $request->status,
-                'date' => now(),
-                'marked_at' => now(),
-            ]);
-
-            // EMAIL
-            try {
-                if ($student->parent_email) {
-                    Mail::to($student->parent_email)
-                        ->send(new AttendanceMail($student, $request->status));
-                }
-            } catch (\Exception $e) {
-                \Log::error($e->getMessage());
-            }
+        } catch (\Exception $e) {
+            \Log::error('Attendance email failed: ' . $e->getMessage());
         }
 
         return back();

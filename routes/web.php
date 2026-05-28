@@ -12,6 +12,19 @@ use App\Http\Controllers\ClassAssignmentController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Mail;
+
+
+
+Route::get('/test-mail', function () {
+
+    Mail::raw('Testing Gmail SMTP Laravel', function ($message) {
+        $message->to('edg.estoquia2@gmail.com')
+                ->subject('Test Email');
+    });
+
+    return "Email Sent!";
+});
 
 Route::get('/', function () {
     return Inertia::render('Auth/Login', [
@@ -118,6 +131,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/attendance/take/{id}', [AttendanceController::class, 'take'])
         ->name('attendance.take');
+
+    Route::post('/attendance/mark', [AttendanceController::class, 'markAttendance'])
+        ->name('attendance.mark');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

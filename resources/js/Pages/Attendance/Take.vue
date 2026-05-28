@@ -1,18 +1,14 @@
 <script setup lang="ts">
-/*
-|--------------------------------------------------------------------------
-| Imports
-|--------------------------------------------------------------------------
-*/
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head } from "@inertiajs/vue3";
+import { Head, router } from "@inertiajs/vue3";
+import { computed, ref } from "vue";
 
 import {
     Card,
     CardContent,
-    CardDescription,
     CardHeader,
     CardTitle,
+    CardDescription,
 } from "@/Components/ui/card";
 
 import {
@@ -25,73 +21,61 @@ import {
 } from "@/Components/ui/table";
 
 import { Button } from "@/Components/ui/button";
-
 import { Input } from "@/Components/ui/input";
 import { Search, Users } from "lucide-vue-next";
 
-import { computed, ref } from "vue";
-
-/*
-|--------------------------------------------------------------------------
-| Props
-|--------------------------------------------------------------------------
-*/
-type Student = {
-    id: number;
-    student_number: string;
-    fullname: string;
-    email: string;
-    year_level: string;
-
-    course?: {
-        course_name: string;
-    };
-};
-
 const props = defineProps<{
     assignment: any;
-    students: Student[];
+    students: any[];
+    attendance: Record<number, any>;
 }>();
 
-/*
-|--------------------------------------------------------------------------
-| Search + Filters
-|--------------------------------------------------------------------------
-*/
 const search = ref("");
 const selectedYear = ref("");
 
-const years = computed(() => {
-    return [...new Set(props.students.map((s) => s.year_level))];
-});
-
-/*
-|--------------------------------------------------------------------------
-| FILTERED STUDENTS
-|--------------------------------------------------------------------------
-*/
+/* --------------------------
+   FILTERED STUDENTS
+--------------------------- */
 const filteredStudents = computed(() => {
-    return props.students.filter((student) => {
+    return props.students.filter((s) => {
         const q = search.value.toLowerCase();
 
-        const matchesSearch =
-            student.fullname.toLowerCase().includes(q) ||
-            student.student_number.toLowerCase().includes(q) ||
-            student.email.toLowerCase().includes(q);
-
-        const matchesYear =
-            !selectedYear.value || student.year_level === selectedYear.value;
-
-        return matchesSearch && matchesYear;
+        return (
+            s.fullname.toLowerCase().includes(q) ||
+            s.student_number.toLowerCase().includes(q) ||
+            s.email.toLowerCase().includes(q)
+        );
     });
 });
 
-/*
-|--------------------------------------------------------------------------
-| TOTAL
-|--------------------------------------------------------------------------
-*/
-const totalStudents = computed(() => filteredStudents.value.length);
+/* --------------------------
+   ATTENDANCE MAP
+--------------------------- */
+const statusMap = computed(() => props.attendance || {});
+
+/* --------------------------
+   LOCK AFTER 5 MINUTES
+--------------------------- */
+const isLocked = (studentId: number) => {
+    const record = props.attendance?.[studentId];
+
+    if (!record) return false;
+
+    const minutes =
+        (Date.now() - new Date(record.created_at).getTime()) / 60000;
+
+    return minutes >= 5;
+};
+
+/* --------------------------
+   MARK ATTENDANCE
+--------------------------- */
+const mark = (status: string, studentId: number) => {
+    router.post(route("attendance.mark"), {
+        student_id: studentId,
+        status,
+    });
+};
 </script>
 
 <template>
@@ -99,90 +83,50 @@ const totalStudents = computed(() => filteredStudents.value.length);
 
     <AuthenticatedLayout>
         <div class="p-4 space-y-6">
-            <!-- CLASS HEADER -->
+            <!-- HEADER -->
             <Card>
                 <CardHeader>
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <CardTitle>
-                                {{ assignment.course.course_name }} -
-                                {{ assignment.section.section_name }}
-                            </CardTitle>
+                    <CardTitle>
+                        {{ assignment.course.course_name }} -
+                        {{ assignment.section.section_name }}
+                    </CardTitle>
 
-                            <CardDescription>
-                                {{ assignment.subject.subject_name }}
-                            </CardDescription>
-                        </div>
-
-                        <div class="text-sm text-muted-foreground">
-                            Year Level:
-                            {{ assignment.section.year_level }}
-                        </div>
-                    </div>
+                    <CardDescription>
+                        {{ assignment.subject.subject_name }}
+                    </CardDescription>
                 </CardHeader>
             </Card>
 
-            <!-- STUDENTS CARD -->
+            <!-- STUDENTS -->
             <Card>
-                <!-- HEADER + FILTERS -->
                 <CardHeader>
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <CardTitle>Students</CardTitle>
-                            <CardDescription>
-                                Mark attendance for today
-                            </CardDescription>
-                        </div>
-
-                        <!-- TOTAL -->
+                    <div class="flex justify-between">
+                        <CardTitle>Students</CardTitle>
                         <div
                             class="flex items-center gap-2 text-muted-foreground"
                         >
                             <Users class="w-4 h-4" />
-                            <span>Total: {{ totalStudents }}</span>
+                            <span>Total: {{ filteredStudents.length }}</span>
                         </div>
                     </div>
 
-                    <!-- SEARCH + FILTER -->
-                    <div class="flex gap-4 mt-4">
-                        <!-- SEARCH -->
-                        <div class="relative w-full max-w-sm">
-                            <Search
-                                class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
-                            />
-
-                            <Input
-                                v-model="search"
-                                placeholder="Search student..."
-                                class="pl-10"
-                            />
-                        </div>
-
-                        <!-- YEAR FILTER -->
-                        <select
-                            v-model="selectedYear"
-                            class="border px-3 py-2 rounded-md w-40"
-                        >
-                            <option value="">All Year Levels</option>
-                            <option v-for="y in years" :key="y" :value="y">
-                                {{ y }}
-                            </option>
-                        </select>
+                    <!-- SEARCH -->
+                    <div class="mt-4">
+                        <Input
+                            v-model="search"
+                            placeholder="Search student..."
+                        />
                     </div>
                 </CardHeader>
 
                 <CardContent>
-                    <!-- TABLE -->
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Student #</TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Email</TableHead>
-                                <TableHead>Year Level</TableHead>
-                                <TableHead class="text-right">
-                                    Action
-                                </TableHead>
+                                <TableHead>Action</TableHead>
                             </TableRow>
                         </TableHeader>
 
@@ -191,50 +135,41 @@ const totalStudents = computed(() => filteredStudents.value.length);
                                 v-for="student in filteredStudents"
                                 :key="student.id"
                             >
-                                <TableCell>
-                                    {{ student.student_number }}
-                                </TableCell>
-
-                                <TableCell class="font-medium">
-                                    {{ student.fullname }}
-                                </TableCell>
+                                <TableCell>{{
+                                    student.student_number
+                                }}</TableCell>
+                                <TableCell>{{ student.fullname }}</TableCell>
+                                <TableCell>{{ student.email }}</TableCell>
 
                                 <TableCell>
-                                    {{ student.email }}
-                                </TableCell>
-
-                                <TableCell>
-                                    {{ student.year_level || "N/A" }}
-                                </TableCell>
-
-                                <TableCell class="text-right space-x-4">
-                                    <div class="flex gap-2 justify-end">
+                                    <!-- NOT LOCKED -->
+                                    <div
+                                        v-if="!isLocked(student.id)"
+                                        class="flex gap-2"
+                                    >
                                         <Button
-                                            size="sm"
-                                            class="bg-red-600 text-white"
+                                            @click="mark('late', student.id)"
                                         >
                                             Late
                                         </Button>
-                                        <Button size="sm" class="bg-yellow-500">
+
+                                        <Button
+                                            @click="mark('present', student.id)"
+                                        >
                                             Present
                                         </Button>
 
                                         <Button
-                                            size="sm"
-                                            class="bg-red-600 text-white"
+                                            @click="mark('absent', student.id)"
                                         >
                                             Absent
                                         </Button>
                                     </div>
-                                </TableCell>
-                            </TableRow>
 
-                            <TableRow v-if="filteredStudents.length === 0">
-                                <TableCell
-                                    colspan="5"
-                                    class="text-center py-8 text-muted-foreground"
-                                >
-                                    No students found
+                                    <!-- LOCKED -->
+                                    <div v-else class="font-bold">
+                                        {{ statusMap[student.id]?.status }}
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         </TableBody>

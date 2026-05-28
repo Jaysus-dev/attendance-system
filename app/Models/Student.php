@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Log;
+
 use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
@@ -9,6 +11,7 @@ class Student extends Model
     protected $fillable = [
 
         'user_id',
+
         'student_number',
 
         'fullname',

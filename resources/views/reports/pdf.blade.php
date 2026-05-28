@@ -41,6 +41,7 @@
             margin-top: 8px;
             margin-bottom: 12px;
             font-size: 9px;
+            line-height: 1.6;
         }
 
         .section-title {
@@ -139,11 +140,14 @@
 <!-- HEADER -->
 <table class="header-table">
     <tr>
+
+        <!-- LEFT -->
         <td width="30%">
-            <strong>Date Generated:</strong><br>
-            {{ now()->format('F d, Y h:i A') }}
+            <strong>Exported By:</strong><br>
+            {{ $teacherName }}
         </td>
 
+        <!-- CENTER -->
         <td width="40%">
             <div class="title">
                 ATTENDANCE REPORT
@@ -154,17 +158,28 @@
             </div>
         </td>
 
+        <!-- RIGHT -->
         <td width="30%" class="text-right">
-            <strong>Exported By:</strong><br>
-            {{ $teacherName }}
+            <strong>Date Generated:</strong><br>
+            {{ now()->format('F d, Y h:i A') }}
         </td>
+
     </tr>
 </table>
 
 <!-- META -->
 <div class="meta">
+
+  
+
+    <strong>Teacher Name:</strong>
+    {{ $teacherName }}
+
+    <br>
+
     <strong>Date Range:</strong>
     {{ $startDate }} to {{ $endDate }}
+
 </div>
 
 <!-- PRESENT TABLE -->
@@ -176,10 +191,9 @@
     <thead>
         <tr>
             <th width="4%">#</th>
-            <th width="24%">Student</th>
-            <th width="18%">Course</th>
-            <th width="18%">Subject</th>
-            <th width="18%">Teacher</th>
+            <th width="30%">Student</th>
+            <th width="24%">Course</th>
+            <th width="24%">Subject</th>
             <th width="18%">Date</th>
         </tr>
     </thead>
@@ -187,7 +201,10 @@
     <tbody>
         @forelse($presentRecords as $index => $a)
             <tr>
-                <td class="text-center">{{ $index + 1 }}</td>
+
+                <td class="text-center">
+                    {{ $index + 1 }}
+                </td>
 
                 <td>
                     {{ $a->student->fullname ?? 'N/A' }}
@@ -201,17 +218,14 @@
                     {{ $a->classAssignment->subject->subject_name ?? 'N/A' }}
                 </td>
 
-                <td>
-                    {{ $a->teacher->name ?? 'N/A' }}
-                </td>
-
                 <td class="text-center">
                     {{ $a->date }}
                 </td>
+
             </tr>
         @empty
             <tr>
-                <td colspan="6" class="text-center">
+                <td colspan="5" class="text-center">
                     No Present Records
                 </td>
             </tr>
@@ -228,10 +242,9 @@
     <thead>
         <tr>
             <th width="4%">#</th>
-            <th width="24%">Student</th>
-            <th width="18%">Course</th>
-            <th width="18%">Subject</th>
-            <th width="18%">Teacher</th>
+            <th width="30%">Student</th>
+            <th width="24%">Course</th>
+            <th width="24%">Subject</th>
             <th width="18%">Date</th>
         </tr>
     </thead>
@@ -239,7 +252,10 @@
     <tbody>
         @forelse($absentRecords as $index => $a)
             <tr>
-                <td class="text-center">{{ $index + 1 }}</td>
+
+                <td class="text-center">
+                    {{ $index + 1 }}
+                </td>
 
                 <td>
                     {{ $a->student->fullname ?? 'N/A' }}
@@ -253,17 +269,14 @@
                     {{ $a->classAssignment->subject->subject_name ?? 'N/A' }}
                 </td>
 
-                <td>
-                    {{ $a->teacher->name ?? 'N/A' }}
-                </td>
-
                 <td class="text-center">
                     {{ $a->date }}
                 </td>
+
             </tr>
         @empty
             <tr>
-                <td colspan="6" class="text-center">
+                <td colspan="5" class="text-center">
                     No Absent Records
                 </td>
             </tr>
@@ -280,10 +293,9 @@
     <thead>
         <tr>
             <th width="4%">#</th>
-            <th width="24%">Student</th>
-            <th width="18%">Course</th>
-            <th width="18%">Subject</th>
-            <th width="18%">Teacher</th>
+            <th width="30%">Student</th>
+            <th width="24%">Course</th>
+            <th width="24%">Subject</th>
             <th width="18%">Date</th>
         </tr>
     </thead>
@@ -291,7 +303,10 @@
     <tbody>
         @forelse($lateRecords as $index => $a)
             <tr>
-                <td class="text-center">{{ $index + 1 }}</td>
+
+                <td class="text-center">
+                    {{ $index + 1 }}
+                </td>
 
                 <td>
                     {{ $a->student->fullname ?? 'N/A' }}
@@ -305,17 +320,14 @@
                     {{ $a->classAssignment->subject->subject_name ?? 'N/A' }}
                 </td>
 
-                <td>
-                    {{ $a->teacher->name ?? 'N/A' }}
-                </td>
-
                 <td class="text-center">
                     {{ $a->date }}
                 </td>
+
             </tr>
         @empty
             <tr>
-                <td colspan="6" class="text-center">
+                <td colspan="5" class="text-center">
                     No Late Records
                 </td>
             </tr>
@@ -327,6 +339,7 @@
 <div class="summary-wrapper">
 
     <table class="summary-table">
+
         <thead>
             <tr>
                 <th colspan="2">
@@ -336,8 +349,10 @@
         </thead>
 
         <tbody>
+
             <tr>
                 <td>Total Present</td>
+
                 <td class="text-center">
                     {{ count($presentRecords) }}
                 </td>
@@ -345,6 +360,7 @@
 
             <tr>
                 <td>Total Absent</td>
+
                 <td class="text-center">
                     {{ count($absentRecords) }}
                 </td>
@@ -352,6 +368,7 @@
 
             <tr>
                 <td>Total Late</td>
+
                 <td class="text-center">
                     {{ count($lateRecords) }}
                 </td>
@@ -366,7 +383,9 @@
                     <strong>{{ count($attendances) }}</strong>
                 </td>
             </tr>
+
         </tbody>
+
     </table>
 
 </div>
@@ -383,3 +402,4 @@
 
 </body>
 </html>
+```

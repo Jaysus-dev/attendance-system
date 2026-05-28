@@ -27,7 +27,7 @@ import { Search, Users } from "lucide-vue-next";
 const props = defineProps<{
     assignment: any;
     students: any[];
-    attendance: Record<number, any>;
+    attendance: Record<string, any>;
 }>();
 
 const search = ref("");
@@ -57,7 +57,8 @@ const statusMap = computed(() => props.attendance || {});
    LOCK AFTER 5 MINUTES
 --------------------------- */
 const isLocked = (studentId: number) => {
-    const record = props.attendance?.[studentId];
+    const key = studentId + "-" + props.assignment.id;
+    const record = props.attendance?.[key];
 
     if (!record) return false;
 
@@ -169,7 +170,11 @@ const mark = (status: string, studentId: number) => {
 
                                     <!-- LOCKED -->
                                     <div v-else class="font-bold">
-                                        {{ statusMap[student.id]?.status }}
+                                        {{
+                                            statusMap[
+                                                student.id + "-" + assignment.id
+                                            ]?.status
+                                        }}
                                     </div>
                                 </TableCell>
                             </TableRow>

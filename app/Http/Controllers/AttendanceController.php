@@ -58,11 +58,14 @@ class AttendanceController extends Controller
             ->get();
 
         // 🔥 GET TODAY'S ATTENDANCE
-        $attendance = Attendance::whereIn('student_id', $students->pluck('id'))
-            ->whereDate('date', now())
-            ->get()
-            ->keyBy('student_id');
+     $attendance = Attendance::whereIn('student_id', $students->pluck('id'))
+    ->where('class_assignment_id', $assignment->id)
+    ->whereDate('date', now())
+    ->get()
+    ->keyBy(function ($item) {
+    return $item->student_id . '-' . $item->class_assignment_id;
 
+    });
         return Inertia::render('Attendance/Take', [
             'assignment' => $assignment,
             'students' => $students,

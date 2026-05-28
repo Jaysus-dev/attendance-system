@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ProfileController;
@@ -75,9 +76,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/assignments', [ClassAssignmentController::class, 'store'])->name('assignments.store');
     Route::delete('/assignments/{id}', [ClassAssignmentController::class, 'destroy']);
 
-    // REPORTS
-    Route::get('/reports', function () { return Inertia::render('Reports'); })->name('reports');
-  
+   
     // SETTINGS
     Route::get('/settings', function () { return Inertia::render('Settings'); })->name('settings');
 
@@ -138,6 +137,9 @@ Route::middleware(['auth', 'role:student'])->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
+
+  Route::get('/reports', [AttendanceReportController::class, 'index'])
+    ->name('reports');
 
     Route::get('/attendance/take/{id}', [AttendanceController::class, 'take'])
         ->name('attendance.take');

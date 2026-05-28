@@ -60,4 +60,13 @@ public function classes()
         'id'
     );
 }
+public function student()
+{
+    return $this->belongsTo(Student::class);
+}
+
+public function classAssignment()
+{
+    return $this->belongsTo(ClassAssignment::class);
+}
 }

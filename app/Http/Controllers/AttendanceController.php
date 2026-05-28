@@ -83,4 +83,21 @@ class AttendanceController extends Controller
             'attendance' => $attendance,
         ]);
     }
+    public function take($id)
+{
+    $assignment = ClassAssignment::with([
+        'course',
+        'section',
+        'subject'
+    ])->findOrFail($id);
+
+    $students = \App\Models\Student::where('section_id', $assignment->section_id)
+        ->where('course_id', $assignment->course_id)
+        ->get();
+
+    return Inertia::render('Attendance/Take', [
+        'assignment' => $assignment,
+        'students' => $students,
+    ]);
+}
 }

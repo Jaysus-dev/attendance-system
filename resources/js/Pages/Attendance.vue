@@ -90,7 +90,16 @@ const props = defineProps({
                                     {{ a.section?.year_level || "Not Set" }}
                                 </TableCell>
                                 <TableCell>
-                                    <Button size="sm">Take Attendance</Button>
+                                    <Button
+                                        size="sm"
+                                        @click="
+                                            $inertia.visit(
+                                                route('attendance.take', a.id),
+                                            )
+                                        "
+                                    >
+                                        Take Attendance
+                                    </Button>
                                 </TableCell>
                             </TableRow>
 
